@@ -1238,14 +1238,10 @@ namespace NQuad
 
         }
 
-        //REESCRIBIR ESTAS FUNCIONES
         public static void DrawTextRec(in string text, in Rectangle rec, in float fontSize, in bool wordWrap, in Color color) {
-            DrawTextRecEx(defaultFont, text, rec, fontSize, wordWrap, color, 0, 0, Color.White, Color.White);
+            DrawTextRecEx(defaultFont, text, rec, fontSize, wordWrap, color);
         }
-        public static void DrawTextRec(in SpriteFont font, in string text, in Rectangle rec, in float fontSize, in bool wordWrap, in Color color) {
-            DrawTextRecEx(font, text, rec, fontSize, wordWrap, color, 0, 0, Color.White, Color.White);
-        }
-        public static void DrawTextRecEx(in SpriteFont font, in string text, in Rectangle rec, in float fontSize, in bool wordWrap, in Color color, int selectStart, in int selectLength, in Color selectTint, in Color selectBackTint) {
+        public static void DrawTextRecEx(in SpriteFont font, in string text, in Rectangle rec, in float fontSize, in bool wordWrap, in Color color) {
             float textOffsetY = 0;            // Offset between lines (on line break '\n')
             float textOffsetX = 0.0f;       // Offset X to next character to draw
 
@@ -1255,15 +1251,13 @@ namespace NQuad
 
             Warp state = wordWrap ? Warp.MEASURE_STATE : Warp.DRAW_STATE;
             for (int i = 0, k = 0; i < text.Length; i++, k++) {
-                //int codepointByteCount = 0;
+                
                 char c = text[i];
                 SpriteFont.Glyph glyph = font.GetGlyphs().GetValueOrDefault(c);
-                //if (codepoint == 0x3f) codepointByteCount = 1;
-                //i += (codepointByteCount - 1);
+                
                 float glyphWidth = 0;
                 if (c != '\n') {
                     glyphWidth = (glyph.BoundsInTexture.Width * fontSize) + font.Spacing;
-                        
                 }
 
                 if (state == Warp.MEASURE_STATE) {
@@ -1272,13 +1266,13 @@ namespace NQuad
                     if ((textOffsetX + glyphWidth + 1) >= rec.Width) {
                         
                         endLine = (endLine < 1) ? i : endLine;
-                        state = (state == Warp.MEASURE_STATE) ? Warp.DRAW_STATE : Warp.MEASURE_STATE;
+                        state = Warp.DRAW_STATE;
 
                     } else if ((i + 1) == text.Length) {
                         endLine = i;
 
-                        state = (state == Warp.MEASURE_STATE) ? Warp.DRAW_STATE : Warp.MEASURE_STATE;
-                    } else if (c == '\n') state = (state == Warp.MEASURE_STATE) ? Warp.DRAW_STATE : Warp.MEASURE_STATE;
+                        state = Warp.DRAW_STATE;
+                    } else if (c == '\n') state = Warp.DRAW_STATE;
 
                     if (state == Warp.DRAW_STATE) {
                         textOffsetX = 0;
@@ -1335,10 +1329,9 @@ namespace NQuad
                         startLine = endLine;
                         endLine = -1;
                         glyphWidth = 0;
-                        selectStart += lastk - k;
                         k = lastk;
 
-                        state = (state == Warp.MEASURE_STATE) ? Warp.DRAW_STATE : Warp.MEASURE_STATE;
+                        state = Warp.MEASURE_STATE;
                     }
 
                 }
