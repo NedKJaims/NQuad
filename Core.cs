@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Input;
 #if TOUCH
 using Microsoft.Xna.Framework.Input.Touch;
 #endif
-using NQuad.Utils;
+using NQuad.Utils.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -36,9 +36,11 @@ namespace NQuad
 
         private static Random random;
 
-        public static void InitCore(in Game game, in GraphicsDeviceManager graphics, in string title, in int width, in int height, in WindowConfigFlag windowConfigFlag) {
+        public static void InitCore(in Game game, in GraphicsDeviceManager manager, in string title, in int width, in int height, in WindowConfigFlag windowConfigFlag, in string contentLocationFolder = "Content") {
             Game = game;
-            Graphics = graphics;
+            Game.Content.RootDirectory = contentLocationFolder;
+            Graphics = manager;
+            
             Render.InitRender();
             Game.Window.Title = title;
 
@@ -48,11 +50,11 @@ namespace NQuad
             MouseCurrentState = Mouse.GetState();
 #endif
 #if GAMEPADS
-            GamePadCurrentStates = new GamePadState[4];
-            for (int i = 0; i < 4; i++) {
+            GamePadCurrentStates = new GamePadState[1];
+            for (int i = 0; i < GamePadCurrentStates.Length; i++) {
                 GamePadCurrentStates[i] = GamePad.GetState(i);
             }
-            GamePadPreviouStates = new GamePadState[4];
+            GamePadPreviouStates = new GamePadState[1];
 #endif
             time = DateTime.Now;
 
@@ -91,7 +93,7 @@ namespace NQuad
             MouseCurrentState = Mouse.GetState();
 #endif
 #if GAMEPADS
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < GamePadCurrentStates.Length; i++) {
                 GamePadPreviouStates[i] = GamePadCurrentStates[i];
                 GamePadCurrentStates[i] = GamePad.GetState(i);
             }
@@ -102,7 +104,6 @@ namespace NQuad
         }
 
         #region Window-related functions
-
         public static void CloseWindow() {
             Game.Exit();
         }
@@ -200,14 +201,20 @@ namespace NQuad
         public static void SetWindowTitle(in string title) {
             Game.Window.Title = title;
         }
-#if DESKTOP
         public static void SetWindowPosition(in int x, in int y) {
+#if DESKTOP && !NETFX_CORE && !WINDOWS_UAP
             Game.Window.Position = new Point(x, y);
+#else
+            Println(LOG.WARNING, "This function is not available on this platform, enter the preprocessor directive DESKTOP if you use Desktop, not UWP.");
+#endif
         }
         public static void SetTextInputEvent(in EventHandler<TextInputEventArgs> eventHandler) {
+#if DESKTOP
             Game.Window.TextInput += eventHandler;
-        }
+#else
+            Println(LOG.WARNING, "This function is not available on this platform, enter the preprocessor directive DESKTOP if you use Desktop, not UWP.");
 #endif
+        }
         public static void SetWindowSize(in int width, in int height) {
             Graphics.PreferredBackBufferWidth = width;
             Graphics.PreferredBackBufferHeight = height;
@@ -252,27 +259,9 @@ namespace NQuad
         public static IntPtr GetWindowHandle() {
             return Game.Window.Handle;
         }
+#endregion Window-related functions
 
-        #endregion Window-related functions
-
-#if KEYBOARD_MOUSE
-        #region  Cursor-related functions
-        public static void ShowCursor() {
-            Game.IsMouseVisible = true;
-        }
-        public static void HideCursor() {
-            Game.IsMouseVisible = false;
-        }
-        public static bool IsCursorHidden() {
-            return Game.IsMouseVisible;
-        }
-        public static void SetMouseIcon(in MouseCursor mouseCursor) {
-            Mouse.SetCursor(mouseCursor);
-        }
-        #endregion  Cursor-related functions
-#endif
-
-        #region Timing-related functions
+#region Timing-related functions
         public static void SetTargetFPS(in double FPS) {
             Game.TargetElapsedTime = TimeSpan.FromSeconds(1d / FPS);
         }
@@ -285,9 +274,9 @@ namespace NQuad
         public static TimeSpan GetTime() {
             return (DateTime.Now - time);
         }
-        #endregion Timing-related functions
+#endregion Timing-related functions
 
-        #region Misc. functions
+#region Misc. functions
         public static void Print(in object message) {
             Console.Write(message);
         }
@@ -429,10 +418,9 @@ namespace NQuad
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
-        #endregion Misc. functions
+#endregion Misc. functions
 
-        #region  Files management functions
-
+#region  Files management functions
         public static T ContentLoad<T>(in string filename) {
             return Game.Content.Load<T>(filename);
         }
@@ -521,10 +509,6 @@ namespace NQuad
                 Vector3 ker = new Vector3(0, glyphs[i].Width, 1);
                 kerning.Add(ker);
             }
-
-            tempCharValues = null;
-            tempCharRecs = null;
-            pixels = null;
             return new SpriteFont(texture, glyphs, cropping, characters, charHeight + lineSpacing, 0, kerning, '?');
         }
 
@@ -534,16 +518,18 @@ namespace NQuad
             BinaryFormatter binForm = new BinaryFormatter();
             memStream.Write(bytes, 0, bytes.Length);
             memStream.Seek(0, SeekOrigin.Begin);
-            return binForm.Deserialize(memStream);
+            object output = binForm.Deserialize(memStream);
+            memStream.Dispose();
+            return output;
         }
         public static void SaveFileData(in string fileName, in object data) {
             if (data != null) {
-
                 BinaryFormatter bf = new BinaryFormatter();
                 MemoryStream ms = new MemoryStream();
                 bf.Serialize(ms, data);
                 byte[] bytes = ms.ToArray();
                 File.WriteAllBytes(fileName, bytes);
+                ms.Dispose();
             }
         }
         public static string LoadFileText(in string filename) {
@@ -611,7 +597,7 @@ namespace NQuad
                 memStream.Write(bytes, 0, bytes.Length);
                 memStream.Seek(0, SeekOrigin.Begin);
                 Dictionary<int, object> data = (Dictionary<int, object>)binForm.Deserialize(memStream);
-
+                memStream.Dispose();
                 return data[position];
             }
             return null;
@@ -622,7 +608,9 @@ namespace NQuad
             BinaryFormatter binForm = new BinaryFormatter();
             memStream.Write(bytes, 0, bytes.Length);
             memStream.Seek(0, SeekOrigin.Begin);
-            return (Dictionary<int, object>)binForm.Deserialize(memStream);
+            Dictionary<int, object> data = (Dictionary<int, object>)binForm.Deserialize(memStream);
+            memStream.Dispose();
+            return data;
         }
         public static void SaveStorageValue(in int position, in object value) {
             if (value != null) {
@@ -643,13 +631,13 @@ namespace NQuad
                 byte[] bytes = ms.ToArray();
 
                 File.WriteAllBytes(GetWorkingDirectory() + "/storage.data", bytes);
+                ms.Dispose();
             }
         }
+#endregion  Files management functions
 
-        #endregion  Files management functions
 #if KEYBOARD_MOUSE
-        #region Input-related functions: keyboard
-
+#region Input-related functions: keyboard
         public static bool IsKeyPressed(in Keys key) {
             return KeyboardCurrentState.IsKeyDown(key) && !KeyboardPreviousState.IsKeyDown(key);
         }
@@ -662,11 +650,21 @@ namespace NQuad
         public static bool IsKeyUp(in Keys key) {
             return KeyboardCurrentState.IsKeyUp(key);
         }
+#endregion Input-related functions: keyboard
 
-        #endregion Input-related functions: keyboard
-
-        #region Input-related functions: mouse 
-
+#region Input-related functions: mouse 
+        public static void ShowCursor() {
+            Game.IsMouseVisible = true;
+        }
+        public static void HideCursor() {
+            Game.IsMouseVisible = false;
+        }
+        public static bool IsCursorHidden() {
+            return Game.IsMouseVisible;
+        }
+        public static void SetMouseIcon(in MouseCursor mouseCursor) {
+            Mouse.SetCursor(mouseCursor);
+        }
         public static bool IsMouseButtonPressed(in MouseButton button) {
             switch (button) {
                 case MouseButton.Left:
@@ -755,14 +753,19 @@ namespace NQuad
         public static int GetMouseVerticalWheelPosition() {
             return MouseCurrentState.ScrollWheelValue;
         }
-
-        #endregion Input-related functions: mouse 
+#endregion Input-related functions: mouse 
 #endif
 #if GAMEPADS
-        #region Input-related functions: gamepads
-
+#region Input-related functions: gamepads
+        public static void SetGamePadsNumber(in byte number) {
+            GamePadCurrentStates = new GamePadState[number];
+            for (int i = 0; i < GamePadCurrentStates.Length; i++) {
+                GamePadCurrentStates[i] = GamePad.GetState(i);
+            }
+            GamePadPreviouStates = new GamePadState[number];
+        }
         public static bool IsGamepadAvailable(in int gamepad) {
-            return GamePadCurrentStates[gamepad].IsConnected;
+            return GamePad.GetState(gamepad).IsConnected;
         }
         public static bool IsGamepadButtonPressed(in int gamepad, in Buttons button) {
             return GamePadCurrentStates[gamepad].IsButtonDown(button) && !GamePadPreviouStates[gamepad].IsButtonDown(button);
@@ -798,12 +801,10 @@ namespace NQuad
             }
 
         }
-
-        #endregion Input-related functions: gamepads
+#endregion Input-related functions: gamepads
 #endif
 #if TOUCH
-        #region Input-related functions: Touch
-
+#region Input-related functions: Touch
         public static void SetTouchGestures(in GestureType gestures) {
             TouchPanel.EnabledGestures = gestures;
         }
@@ -833,8 +834,7 @@ namespace NQuad
                 gesture = TouchPanel.ReadGesture();
             }
         }
-
-        #endregion Input-related functions: Touch
+#endregion Input-related functions: Touch
 #endif
     }
 }

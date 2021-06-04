@@ -1,7 +1,7 @@
 ﻿#if GAMEPADS
 using System;
 
-namespace NQuad.Utils
+namespace NQuad.Utils.Core
 {
     [Flags]
     public enum Triggers

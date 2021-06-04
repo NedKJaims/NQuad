@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
-namespace NQuad.Utils
+namespace NQuad.Utils.Render
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct Vertex : IVertexType

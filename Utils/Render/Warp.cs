@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NQuad.Utils
+namespace NQuad.Utils.Render
 {
     [Flags]
     internal enum Warp 

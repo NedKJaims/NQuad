@@ -3,7 +3,7 @@ using System;
 
 namespace NQuad
 {
-    public static class Collision2D
+    public static class Collision
     {
 
         public static bool CheckCollisionRecs(in Rectangle rec1, in Rectangle rec2) {
@@ -91,11 +91,9 @@ namespace NQuad
 
             return (point.X >= rec.X) && (point.X <= (rec.X + rec.Width)) && (point.Y >= rec.Y) && (point.Y <= (rec.Y + rec.Height));
         }
-
         public static bool CheckCollisionPointCircle(in Vector2 point, in Vector2 center, in float radius) {
             return CheckCollisionCircles(point, 0, center, radius);
         }
-
         public static bool CheckCollisionPointTriangle(in Vector2 point, in Vector2 p1, in Vector2 p2, in Vector2 p3) {
             float alpha = ((p2.Y - p3.Y) * (point.X - p3.X) + (p3.X - p2.X) * (point.Y - p3.Y)) /
                           ((p2.Y - p3.Y) * (p1.X - p3.X) + (p3.X - p2.X) * (p1.Y - p3.Y));
@@ -110,30 +108,65 @@ namespace NQuad
             return false;
         }
 
+        public static bool CheckCollisionLines(in Vector2 startPos1, in Vector2 endPos1, in Vector2 startPos2, in Vector2 endPos2, ref Vector2 collisionPoint) {
+            float div = (endPos2.Y - startPos2.Y) * (endPos1.X - startPos1.X) - (endPos2.X - startPos2.X) * (endPos1.Y - startPos1.Y);
+
+            if (div == 0.0f) return false;      // WARNING: This check could not work due to float precision rounding issues...
+
+            float xi = ((startPos2.X - endPos2.X) * (startPos1.X * endPos1.Y - startPos1.Y * endPos1.X) - (startPos1.X - endPos1.X) * (startPos2.X * endPos2.Y - startPos2.Y * endPos2.X)) / div;
+            float yi = ((startPos2.Y - endPos2.Y) * (startPos1.X * endPos1.Y - startPos1.Y * endPos1.X) - (startPos1.Y - endPos1.Y) * (startPos2.X * endPos2.Y - startPos2.Y * endPos2.X)) / div;
+
+            if (xi < Math.Min(startPos1.X, endPos1.X) || xi > Math.Max(startPos1.X, endPos1.X)) return false;
+            if (xi < Math.Min(startPos2.X, endPos2.X) || xi > Math.Max(startPos2.X, endPos2.X)) return false;
+            if (yi < Math.Min(startPos1.Y, endPos1.Y) || yi > Math.Max(startPos1.Y, endPos1.Y)) return false;
+            if (yi < Math.Min(startPos2.Y, endPos2.Y) || yi > Math.Max(startPos2.Y, endPos2.Y)) return false;
+
+            collisionPoint.X = xi;
+            collisionPoint.Y = yi;
+
+            return true;
+        }
+        public static bool CheckCollisionPointLine(in Vector2 point, in Vector2 p1, in Vector2 p2, in int threshold) {
+            bool collision = false;
+            float dxc = point.X - p1.X;
+            float dyc = point.Y - p1.Y;
+            float dxl = p2.X - p1.X;
+            float dyl = p2.Y - p1.Y;
+            float cross = dxc * dyl - dyc * dxl;
+
+            if (Math.Abs(cross) < (threshold * Math.Max(Math.Abs(dxl), Math.Abs(dyl)))) {
+                if (Math.Abs(dxl) >= Math.Abs(dyl)) collision = (dxl > 0) ? ((p1.X <= point.X) && (point.X <= p2.X)) : ((p2.X <= point.X) && (point.X <= p1.X));
+                else collision = (dyl > 0) ? ((p1.Y <= point.Y) && (point.Y <= p2.Y)) : ((p2.Y <= point.Y) && (point.Y <= p1.Y));
+            }
+
+            return collision;
+        }
+
+
     }
 
 
-/*   How to use:
-*   The four inputs t,b,c,d are defined as follows:
-*   t = current time (in any unit measure, but same unit as duration)
-*   b = starting value to interpolate
-*   c = the total change in value of b that needs to occur
-*   d = total time it should take to complete (duration)
-*
-*   Example:
-*
-*   int currentTime = 0;
-*   int duration = 100;
-*   float startPositionX = 0.0f;
-*   float finalPositionX = 30.0f;
-*   float currentPositionX = startPositionX;
-*
-*   while (currentPositionX < finalPositionX)
-*   {
-*       currentPositionX = EaseSineIn(currentTime, startPositionX, finalPositionX - startPositionX, duration);
-*       currentTime++;
-*   }
-*/
+    /*   How to use:
+    *   The four inputs t,b,c,d are defined as follows:
+    *   t = current time (in any unit measure, but same unit as duration)
+    *   b = starting value to interpolate
+    *   c = the total change in value of b that needs to occur
+    *   d = total time it should take to complete (duration)
+    *
+    *   Example:
+    *
+    *   int currentTime = 0;
+    *   int duration = 100;
+    *   float startPositionX = 0.0f;
+    *   float finalPositionX = 30.0f;
+    *   float currentPositionX = startPositionX;
+    *
+    *   while (currentPositionX < finalPositionX)
+    *   {
+    *       currentPositionX = EaseSineIn(currentTime, startPositionX, finalPositionX - startPositionX, duration);
+    *       currentTime++;
+    *   }
+    */
     public static class Easings
     {
 

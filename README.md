@@ -14,8 +14,9 @@
 ### Supported platforms
 The platforms on which `NQuad` has been tested are:
 
-* Windows (DirectX)
+* Windows (DirectX).
 * DesktopGL (Windows, Linux, MacOS).
+* UWP (DirectX, XAML).
 * Android (API 29).
 
 It is believed that it is compatible with all the projects that `monogame` offers, since it uses the main classes of said library.
@@ -25,7 +26,7 @@ It is believed that it is compatible with all the projects that `monogame` offer
 1. Download the project and link to your project.
 2. Define the constants in the main project depending on the platform and the input that will be used:
     1. Define the platform:
-        1. **DESKTOP** for Windows (DirectX) and DesktopGL.
+        1. **DESKTOP** for Windows (DirectX), DesktopGL and UWP.
         This in order to activate some functions that are not in the other platforms.
         (*For the other platforms it is optional to define the platform*).
     2. Define the input that will be used:
@@ -38,7 +39,7 @@ It is believed that it is compatible with all the projects that `monogame` offer
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NQuad;
-using NQuad.Utils;
+using NQuad.Utils.Core;
 
 namespace My_project
 {
@@ -48,7 +49,6 @@ namespace My_project
         private GraphicsDeviceManager graphics;
         private Texture2D texture;
         public Game1() {
-            Content.RootDirectory = "Content";
             graphics = new GraphicsDeviceManager(this);
         }
 

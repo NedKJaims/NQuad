@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using NQuad.Utils;
+using NQuad.Utils.Render;
 using System;
 using System.Collections.Generic;
 
@@ -19,8 +19,6 @@ namespace NQuad
         private static Texture2D currentTexture;
         private static PrimitiveType currentPrimitive;
 
-        private static byte DrawCall = 0;
-
         private static SpriteFont defaultFont;
 
         public static void InitRender() {
@@ -29,7 +27,6 @@ namespace NQuad
             for (int i = 0; i < 8192 * 6; i++) {
                 data[i] = new Vertex(Vector2.Zero, Vector2.Zero, Color.White);
             }
-
             defaultTexture = new Texture2D(Core.Game.GraphicsDevice, 1, 1);
             defaultTexture.SetData(new Color[] { Color.White });
             defaultTexture.Name = "Default";
@@ -155,18 +152,8 @@ namespace NQuad
             }
 
             defaultFont = new SpriteFont(texture, glyphs, cropping, characters, 15, 0, kerning, '?');
-            defaultFontData = null;
-            charsWidth = null;
-            texture = null;
-            glyphs = null;
-            cropping = null;
-            characters = null;
-            kerning = null;
         }
 
-        public static byte GetDrawCalls() {
-            return DrawCall;
-        }
         public static SpriteFont GetDefaultFont() {
             return defaultFont;
         }
@@ -174,8 +161,7 @@ namespace NQuad
         public static void ClearBackground(in Color color) {
             Core.Game.GraphicsDevice.Clear(color);
         }
-
-        public static void BeginScissorMode(in int x, in int y, in int width, in int height) {
+        public static void SetScissorRectangle(in int x, in int y, in int width, in int height) {
             Core.Game.GraphicsDevice.ScissorRectangle = new Rectangle(x, y, width, height);
         }
         public static void BeginRenderTarget(ref RenderTarget2D renderTarget) {
@@ -186,32 +172,35 @@ namespace NQuad
         }
         public static void Begin() {
             index = 0;
-            DrawCall = 0;
+            defaultShader.CurrentTechnique.Passes[0].Apply();
+            Core.Game.GraphicsDevice.Textures[0] = currentTexture;
+
+            Core.Game.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+            Core.Game.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+            Core.Game.GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
+        }
+        public static void Begin(in BlendState blendState = null) {
+            index = 0;
+
+            Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
+            Core.Game.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+            Core.Game.GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
+
             defaultShader.CurrentTechnique.Passes[0].Apply();
             Core.Game.GraphicsDevice.Textures[0] = currentTexture;
         }
-        public static void Begin(in BlendState? blendState = null) {
+        public static void Begin(in BlendState blendState = null, in SamplerState samplerState = null) {
             index = 0;
-            DrawCall = 0;
 
             Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
-
-            defaultShader.CurrentTechnique.Passes[0].Apply();
-            Core.Game.GraphicsDevice.Textures[0] = currentTexture;
-        }
-        public static void Begin(in BlendState? blendState = null, in SamplerState? samplerState = null) {
-            index = 0;
-            DrawCall = 0;
-
-            Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
+            Core.Game.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             Core.Game.GraphicsDevice.SamplerStates[0] = samplerState ?? SamplerState.PointClamp;
 
             defaultShader.CurrentTechnique.Passes[0].Apply();
             Core.Game.GraphicsDevice.Textures[0] = currentTexture;
         }
-        public static void Begin(in BlendState? blendState = null, in RasterizerState? rasterizerState = null, in SamplerState? samplerState = null) {
+        public static void Begin(in BlendState blendState = null, in RasterizerState rasterizerState = null, in SamplerState samplerState = null) {
             index = 0;
-            DrawCall = 0;
 
             Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
             Core.Game.GraphicsDevice.RasterizerState = rasterizerState ?? RasterizerState.CullNone;
@@ -226,7 +215,6 @@ namespace NQuad
                 int mod = (currentPrimitive == PrimitiveType.TriangleList) ? 3 : 2;
                 Core.Game.GraphicsDevice.DrawUserPrimitives(currentPrimitive, data, 0, index / mod);
                 defaultShader.TransformMatrix = null;
-                DrawCall++;
                 index = 0;
             }
         }
@@ -235,9 +223,6 @@ namespace NQuad
         }
         public static void EndRenderTarget() {
             Core.Game.GraphicsDevice.SetRenderTarget(null);
-        }
-        public static void EndScissorMode() {
-            Core.Game.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Core.GetWindowWidth(), Core.GetWindowHeight());
         }
 
         private static void CheckBufferLimitMode(in int additionalVertex, in PrimitiveType type, in Texture2D texture) {
@@ -290,33 +275,16 @@ namespace NQuad
             data[index++].Set(endPos.X, endPos.Y, 0, 0, color);
         }
         public static void DrawLineEx(Vector2 startPos, Vector2 endPos, in float thick, in Color color) {
-            CheckBufferLimitMode(6, PrimitiveType.TriangleList, defaultTexture);
-            if (startPos.X > endPos.X) {
-                Vector2 tempPos = startPos;
-                startPos = endPos;
-                endPos = tempPos;
+            Vector2 delta = new Vector2(endPos.X - startPos.X, endPos.Y - startPos.Y);
+            float length = (float)Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y);
+            if (length > 0 && thick > 0) {
+                float scale = thick / (2 * length);
+                Vector2 radius = new Vector2( -scale * delta.Y, scale * delta.X );
+                Vector2[] strip = {new Vector2(startPos.X-radius.X, startPos.Y-radius.Y), new Vector2(startPos.X+radius.X, startPos.Y+radius.Y),
+                           new Vector2(endPos.X-radius.X, endPos.Y-radius.Y), new Vector2(endPos.X+radius.X, endPos.Y+radius.Y)};
+
+                DrawTriangleStrip(strip, color);
             }
-            Vector2 origin = new Vector2(0f, 0.5f);
-            float dx = endPos.X - startPos.X;
-            float dy = endPos.Y - startPos.Y;
-            float d = (float)Math.Sqrt(dx * dx + dy * dy);
-            float angle = (float)Math.Atan(dy / dx);
-            float cos = (float)Math.Cos(angle);
-            float sin = (float)Math.Sin(angle);
-
-
-            Vector2 TL = new Vector2(startPos.X + origin.X * cos - origin.Y * sin, startPos.Y + origin.X * sin + origin.Y * cos);
-            Vector2 TR = new Vector2(startPos.X + (origin.X + d) * cos - origin.Y * sin, startPos.Y + (origin.X + d) * sin + origin.Y * cos);
-            Vector2 BL = new Vector2(startPos.X + origin.X * cos - (origin.Y + thick) * sin, startPos.Y + origin.X * sin + (origin.Y + thick) * cos);
-            Vector2 BR = new Vector2(startPos.X + (origin.X + d) * cos - (origin.Y + thick) * sin, startPos.Y + (origin.X + d) * sin + (origin.Y + thick) * cos);
-
-            data[index++].Set(TL.X, TL.Y, 0, 0, color);
-            data[index++].Set(TR.X, TR.Y, 0, 0, color);
-            data[index++].Set(BL.X, BL.Y, 0, 0, color);
-
-            data[index++].Set(TR.X, TR.Y, 0, 0, color);
-            data[index++].Set(BR.X, BR.Y, 0, 0, color);
-            data[index++].Set(BL.X, BL.Y, 0, 0, color);
         }
         public static void DrawLineBezier(in Vector2 startPos, in Vector2 endPos, in float thick, in Color color) {
             const int BEZIER_LINE_DIVISIONS = 24;
@@ -911,6 +879,22 @@ namespace NQuad
 
             }
         }
+        public static void DrawTriangleFan(in Vector2[] points, in Vector2 center, in Color color) {
+            if (points.Length >= 3) {
+                CheckBufferLimitMode((points.Length - 2) * 6, PrimitiveType.TriangleList, defaultTexture);
+                for (int i = 1; i < points.Length - 1; i++) {
+
+                    data[index++].Set(points[0].X + center.X, points[0].Y + center.Y, 0, 0, color);           //TL
+                    data[index++].Set(points[i + 1].X + center.X, points[i + 1].Y + center.Y, 0, 0, color);   //TR
+                    data[index++].Set(points[i].X + center.X, points[i].Y + center.Y, 0, 0, color);           //DL
+
+                    data[index++].Set(points[i + 1].X+ center.X, points[i + 1].Y + center.Y, 0, 0, color);   //TR
+                    data[index++].Set(points[i + 1].X + center.X, points[i + 1].Y + center.Y, 0, 0, color);   //DR
+                    data[index++].Set(points[i].X + center.X, points[i].Y + center.Y, 0, 0, color);           //DL
+                }
+
+            }
+        }
         public static void DrawTriangleStrip(in Vector2[] points, in Color color) {
             if (points.Length >= 3) {
                 CheckBufferLimitMode(3 * (points.Length - 2), PrimitiveType.TriangleList, defaultTexture);
@@ -1183,6 +1167,36 @@ namespace NQuad
             data[index++].Set(BL.X, BL.Y, _texCoordTL.X, _texCoordBR.Y, color);
 
         }
+        public static void DrawTexturePoly(Texture2D texture, in Vector2[] points, in Vector2[] texcoords, in Color color) {
+            if (points.Length >= 3) {
+                CheckBufferLimitMode((points.Length - 2) * 6, PrimitiveType.TriangleList, texture);
+                for (int i = 1; i < points.Length - 1; i++) {
+                    data[index++].Set(points[0].X, points[0].Y, texcoords[0].X, texcoords[0].Y, color);           //TL
+                    data[index++].Set(points[i + 1].X, points[i + 1].Y, texcoords[i + 1].X, texcoords[i + 1].Y, color);   //TR
+                    data[index++].Set(points[i].X, points[i].Y, texcoords[i].X, texcoords[i].Y, color);           //DL
+
+                    data[index++].Set(points[i + 1].X, points[i + 1].Y, texcoords[i + 1].X, texcoords[i + 1].Y, color);   //TR
+                    data[index++].Set(points[i + 1].X, points[i + 1].Y, texcoords[i + 1].X, texcoords[i + 1].Y, color);   //DR
+                    data[index++].Set(points[i].X, points[i].Y, texcoords[i].X, texcoords[i].Y, color);           //DL
+                }
+
+            }
+        }
+        public static void DrawTexturePoly(Texture2D texture, Vector2 center, in Vector2[] points, in Vector2[] texcoords, in Color color) {
+            if (points.Length >= 3) {
+                CheckBufferLimitMode((points.Length - 2) * 6, PrimitiveType.TriangleList, texture);
+                for (int i = 1; i < points.Length - 1; i++) {
+                    data[index++].Set(points[0].X + center.X, points[0].Y + center.Y, texcoords[0].X, texcoords[0].Y, color);           //TL
+                    data[index++].Set(points[i + 1].X + center.X, points[i + 1].Y + center.Y, texcoords[i + 1].X, texcoords[i + 1].Y, color);   //TR
+                    data[index++].Set(points[i].X + center.X, points[i].Y + center.Y, texcoords[i].X, texcoords[i].Y, color);           //DL
+
+                    data[index++].Set(points[i + 1].X + center.X, points[i + 1].Y + center.Y, texcoords[i + 1].X, texcoords[i + 1].Y, color);   //TR
+                    data[index++].Set(points[i + 1].X + center.X, points[i + 1].Y + center.Y, texcoords[i + 1].X, texcoords[i + 1].Y, color);   //DR
+                    data[index++].Set(points[i].X + center.X, points[i].Y + center.Y, texcoords[i].X, texcoords[i].Y, color);           //DL
+                }
+
+            }
+        }
 
         public static void DrawText(in string text, in float posX, in float posY, float fontSize, in Color color) {
             DrawText(defaultFont, text, posX, posY, fontSize, color);
@@ -1199,6 +1213,11 @@ namespace NQuad
                     offset.X = 0;
                     offset.Y += font.LineSpacing * fontSize;
                     firstGlyphOfLine = true;
+                    continue;
+                }
+                else if(c == '\t') {
+                    SpriteFont.Glyph space = font.GetGlyphs().GetValueOrDefault(' ');
+                    offset.X += ((space.Width + space.RightSideBearing) * fontSize) * 4;
                     continue;
                 }
 
@@ -1238,10 +1257,27 @@ namespace NQuad
 
         }
 
-        public static void DrawTextRec(in string text, in Rectangle rec, in float fontSize, in bool wordWrap, in Color color) {
-            DrawTextRecEx(defaultFont, text, rec, fontSize, wordWrap, color);
+        public static void DrawFPS(in float posX, in float posY, in float fontSize) {
+            Color color = Color.Lime; // good fps
+            int fps = (int)Core.GetFPS();
+
+            if (fps < 30 && fps >= 15) color = Color.Orange;  // warning FPS
+            else if (fps < 15) color = Color.Red;    // bad FPS
+            DrawText($"FPS: {fps}", posX, posY, fontSize, color);
         }
-        public static void DrawTextRecEx(in SpriteFont font, in string text, in Rectangle rec, in float fontSize, in bool wordWrap, in Color color) {
+        public static void DrawFPS(in SpriteFont font, in float posX, in float posY, in float fontSize) {
+            Color color = Color.Lime; // good fps
+            int fps = (int)Core.GetFPS();
+
+            if (fps < 30 && fps >= 15) color = Color.Orange;  // warning FPS
+            else if (fps < 15) color = Color.Red;    // bad FPS
+            DrawText(font, $"FPS: {fps}", posX, posY, fontSize, color);
+        }
+
+        public static void DrawTextRec(in string text, in Rectangle rec, in float fontSize, in bool wordWrap, in Color color) {
+            DrawTextRec(defaultFont, text, rec, fontSize, wordWrap, color);
+        }
+        public static void DrawTextRec(in SpriteFont font, in string text, in Rectangle rec, in float fontSize, in bool wordWrap, in Color color) {
             float textOffsetY = 0;            // Offset between lines (on line break '\n')
             float textOffsetX = 0.0f;       // Offset X to next character to draw
 
@@ -1343,29 +1379,31 @@ namespace NQuad
 
         #endregion DRAW FUNCTIONS
 
-        #region SHADER FUNCTIONS
+        #region SHADER-CUSTOM FUNCTIONS
 
         public static void BeginShader(in Effect effect) {
             index = 0;
-            DrawCall = 0;
+            Core.Game.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+            Core.Game.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+            Core.Game.GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
             effect.CurrentTechnique.Passes[0].Apply();
         }
-        public static void BeginShader(in Effect effect, in BlendState? blendState = null) {
+        public static void BeginShader(in Effect effect, in BlendState blendState = null) {
             index = 0;
-            DrawCall = 0;
             Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
+            Core.Game.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+            Core.Game.GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
             effect.CurrentTechnique.Passes[0].Apply();
         }
-        public static void BeginShader(in Effect effect, in BlendState? blendState = null, in SamplerState? samplerState = null) {
+        public static void BeginShader(in Effect effect, in BlendState blendState = null, in SamplerState samplerState = null) {
             index = 0;
-            DrawCall = 0;
             Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
+            Core.Game.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             Core.Game.GraphicsDevice.SamplerStates[0] = samplerState ?? SamplerState.PointClamp;
             effect.CurrentTechnique.Passes[0].Apply();
         }
-        public static void BeginShader(in Effect effect, in BlendState? blendState = null, in RasterizerState? rasterizerState = null, in SamplerState? samplerState = null) {
+        public static void BeginShader(in Effect effect, in BlendState blendState = null, in RasterizerState rasterizerState = null, in SamplerState samplerState = null) {
             index = 0;
-            DrawCall = 0;
             Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
             Core.Game.GraphicsDevice.RasterizerState = rasterizerState ?? RasterizerState.CullNone;
             Core.Game.GraphicsDevice.SamplerStates[0] = samplerState ?? SamplerState.PointClamp;
@@ -1383,7 +1421,7 @@ namespace NQuad
             data[index++].Set(PositionX, PositionY, TexcoordX, TexcoordY, color);
         }
 
-        #endregion SHADER FUNCTIONS
+        #endregion SHADER-CUSTOM FUNCTIONS
 
     }
 }

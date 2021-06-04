@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace NQuad.Utils
+namespace NQuad.Utils.Render
 {
     public class Camera
     {
