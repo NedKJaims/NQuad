@@ -3,27 +3,25 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
-namespace NQuad.Utils.Render
-{
+namespace NQuad.Utils.Render {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct Vertex : IVertexType
-    {
+    internal struct Vertex : IVertexType {
         [DataMember]
         private Vector2 Position;
         [DataMember]
         private Vector2 Texcoord;
         [DataMember]
         private Color Color;
-        
+
         public static readonly VertexDeclaration VertexDeclaration;
 
-        public Vertex(in Vector2 position, in Vector2 texcoord, in Color color) {
+        public Vertex(Vector2 position, Vector2 texcoord, Color color) {
             Position = position;
             Texcoord = texcoord;
             Color = color;
         }
 
-        public void Set(in float x, in float y, in float TXx, in float TYy, in Color col) {
+        public void Set(float x, float y, float TXx, float TYy, Color col) {
             Position.X = x;
             Position.Y = y;
             Texcoord.X = TXx;
@@ -50,11 +48,11 @@ namespace NQuad.Utils.Render
             return "{{Position:" + this.Position + " Color:" + this.Color + " TextureCoordinate:" + this.Texcoord + "}}";
         }
 
-        public static bool operator ==(in Vertex left, in Vertex right) {
+        public static bool operator ==(Vertex left, Vertex right) {
             return (left.Position == right.Position) && (left.Color == right.Color) && (left.Texcoord == right.Texcoord);
         }
 
-        public static bool operator !=(in Vertex left, in Vertex right) {
+        public static bool operator !=(Vertex left, Vertex right) {
             return !(left == right);
         }
 

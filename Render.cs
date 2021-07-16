@@ -4,22 +4,21 @@ using NQuad.Utils.Render;
 using System;
 using System.Collections.Generic;
 
-namespace NQuad
-{
-    public static class Render
-    {
+namespace NQuad {
+    public static class Render {
         private const float PI = 3.14159265358979323846f;
         private const float DEG2RAD = PI / 180.0f;
         private const float SMOOTH_CIRCLE_ERROR_RATE = 0.5f;
+        private static readonly float[] anglesRectangleRound = { 180.0f, 90.0f, 0.0f, 270.0f };
 
-        private static ushort index;
-        private static Vertex[] data;
-        private static SpriteEffect defaultShader;
-        private static Texture2D defaultTexture;
-        private static Texture2D currentTexture;
-        private static PrimitiveType currentPrimitive;
+        private static ushort index { get; set; }
+        private static Vertex[] data { get; set; }
+        private static SpriteEffect defaultShader { get; set; }
+        private static Texture2D defaultTexture { get; set; }
+        private static Texture2D currentTexture { get; set; }
+        private static PrimitiveType currentPrimitive { get; set; }
 
-        private static SpriteFont defaultFont;
+        private static SpriteFont defaultFont { get; set; }
 
         public static void InitRender() {
             index = 0;
@@ -34,7 +33,7 @@ namespace NQuad
             currentTexture = defaultTexture;
 
             defaultShader = new SpriteEffect(Core.Game.GraphicsDevice);
-            
+
             currentPrimitive = PrimitiveType.TriangleList;
 
             Core.Game.GraphicsDevice.BlendState = BlendState.AlphaBlend;
@@ -46,7 +45,7 @@ namespace NQuad
 
         }
         private static void CreateDefaultFont() {
-            
+
             uint[] defaultFontData = {
                 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00200020, 0x0001b000, 0x00000000, 0x00000000, 0x8ef92520, 0x00020a00, 0x7dbe8000, 0x1f7df45f,
                 0x4a2bf2a0, 0x0852091e, 0x41224000, 0x10041450, 0x2e292020, 0x08220812, 0x41222000, 0x10041450, 0x10f92020, 0x3efa084c, 0x7d22103c, 0x107df7de,
@@ -144,7 +143,7 @@ namespace NQuad
                 } else currentPosX = testPosX;
 
                 glyphs.Add(glyph);
-                cropping.Add(Rectangle.Empty);
+                cropping.Add(Microsoft.Xna.Framework.Rectangle.Empty);
 
                 Vector3 k = new Vector3(0, glyph.Width, 1);
                 kerning.Add(k);
@@ -158,16 +157,16 @@ namespace NQuad
             return defaultFont;
         }
 
-        public static void ClearBackground(in Color color) {
+        public static void ClearBackground(Color color) {
             Core.Game.GraphicsDevice.Clear(color);
         }
-        public static void SetScissorRectangle(in int x, in int y, in int width, in int height) {
+        public static void SetScissorRectangle(int x, int y, int width, int height) {
             Core.Game.GraphicsDevice.ScissorRectangle = new Rectangle(x, y, width, height);
         }
         public static void BeginRenderTarget(ref RenderTarget2D renderTarget) {
             Core.Game.GraphicsDevice.SetRenderTarget(renderTarget);
         }
-        public static void BeginCamera(in Camera camera) {
+        public static void BeginCamera(ref Camera camera) {
             defaultShader.TransformMatrix = camera.Matrix;
         }
         public static void Begin() {
@@ -179,7 +178,7 @@ namespace NQuad
             Core.Game.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             Core.Game.GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
         }
-        public static void Begin(in BlendState blendState = null) {
+        public static void Begin(BlendState blendState = null) {
             index = 0;
 
             Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
@@ -189,7 +188,7 @@ namespace NQuad
             defaultShader.CurrentTechnique.Passes[0].Apply();
             Core.Game.GraphicsDevice.Textures[0] = currentTexture;
         }
-        public static void Begin(in BlendState blendState = null, in SamplerState samplerState = null) {
+        public static void Begin(BlendState blendState = null, SamplerState samplerState = null) {
             index = 0;
 
             Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
@@ -199,7 +198,7 @@ namespace NQuad
             defaultShader.CurrentTechnique.Passes[0].Apply();
             Core.Game.GraphicsDevice.Textures[0] = currentTexture;
         }
-        public static void Begin(in BlendState blendState = null, in RasterizerState rasterizerState = null, in SamplerState samplerState = null) {
+        public static void Begin(BlendState blendState = null, RasterizerState rasterizerState = null, SamplerState samplerState = null) {
             index = 0;
 
             Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
@@ -211,7 +210,7 @@ namespace NQuad
         }
 
         public static void End() {
-            if(index != 0) {
+            if (index != 0) {
                 int mod = (currentPrimitive == PrimitiveType.TriangleList) ? 3 : 2;
                 Core.Game.GraphicsDevice.DrawUserPrimitives(currentPrimitive, data, 0, index / mod);
                 defaultShader.TransformMatrix = null;
@@ -225,7 +224,7 @@ namespace NQuad
             Core.Game.GraphicsDevice.SetRenderTarget(null);
         }
 
-        private static void CheckBufferLimitMode(in int additionalVertex, in PrimitiveType type, in Texture2D texture) {
+        private static void CheckBufferLimitMode(int additionalVertex, PrimitiveType type, Texture2D texture) {
             if (texture != currentTexture || currentPrimitive != type) {
                 if (texture == null || texture.IsDisposed)
                     throw new Exception("No exist texture");
@@ -239,7 +238,7 @@ namespace NQuad
 
         #region DRAW FUNCTIONS
 
-        public static void DrawPixel(in float posX, in float posY, in Color color) {
+        public static void Pixel(float posX, float posY, Color color) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, defaultTexture);
             float right = posX + 1;
             float down = posY + 1;
@@ -251,7 +250,7 @@ namespace NQuad
             data[index++].Set(right, down, 0, 0, color);
             data[index++].Set(posX, down, 0, 0, color);
         }
-        public static void DrawPixelV(in Vector2 position, in Color color) {
+        public static void Pixel(Vector2 position, Color color) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, defaultTexture);
             float right = position.X + 1;
             float down = position.Y + 1;
@@ -264,45 +263,45 @@ namespace NQuad
             data[index++].Set(position.X, down, 0, 0, color);
         }
 
-        public static void DrawLine(in float startPosX, in float startPosY, in float endPosX, in float endPosY, in Color color) {
+        public static void Line(float startPosX, float startPosY, float endPosX, float endPosY, Color color) {
             CheckBufferLimitMode(2, PrimitiveType.LineList, defaultTexture);
             data[index++].Set(startPosX, startPosY, 0, 0, color);
             data[index++].Set(endPosX, endPosY, 0, 0, color);
         }
-        public static void DrawLineV(in Vector2 startPos, in Vector2 endPos, in Color color) {
+        public static void Line(Vector2 startPos, Vector2 endPos, Color color) {
             CheckBufferLimitMode(2, PrimitiveType.LineList, defaultTexture);
             data[index++].Set(startPos.X, startPos.Y, 0, 0, color);
             data[index++].Set(endPos.X, endPos.Y, 0, 0, color);
         }
-        public static void DrawLineEx(Vector2 startPos, Vector2 endPos, in float thick, in Color color) {
+        public static void Line(Vector2 startPos, Vector2 endPos, float thick, Color color) {
             Vector2 delta = new Vector2(endPos.X - startPos.X, endPos.Y - startPos.Y);
             float length = (float)Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y);
             if (length > 0 && thick > 0) {
                 float scale = thick / (2 * length);
-                Vector2 radius = new Vector2( -scale * delta.Y, scale * delta.X );
+                Vector2 radius = new Vector2(-scale * delta.Y, scale * delta.X);
                 Vector2[] strip = {new Vector2(startPos.X-radius.X, startPos.Y-radius.Y), new Vector2(startPos.X+radius.X, startPos.Y+radius.Y),
                            new Vector2(endPos.X-radius.X, endPos.Y-radius.Y), new Vector2(endPos.X+radius.X, endPos.Y+radius.Y)};
 
-                DrawTriangleStrip(strip, color);
+                TriangleStrip(strip, color);
             }
         }
-        public static void DrawLineBezier(in Vector2 startPos, in Vector2 endPos, in float thick, in Color color) {
+        public static void LineBezier(Vector2 startPos, Vector2 endPos, float thick, Color color) {
             const int BEZIER_LINE_DIVISIONS = 24;
             Vector2 previous = startPos;
             Vector2 current;
 
             for (int i = 1; i <= BEZIER_LINE_DIVISIONS; i++) {
-                // Cubic easing in-out
+                // Cubic easing -out
                 // NOTE: Easing is calculated only for y position value
                 current.Y = Easings.EaseCubicInOut(i, startPos.Y, endPos.Y - startPos.Y, BEZIER_LINE_DIVISIONS);
                 current.X = previous.X + (endPos.X - startPos.X) / BEZIER_LINE_DIVISIONS;
 
-                DrawLineEx(previous, current, thick, color);
+                Line(previous, current, thick, color);
 
                 previous = current;
             }
         }
-        public static void DrawLineStrip(in Vector2[] points, in Color color) {
+        public static void LineStrip(Vector2[] points, Color color) {
             if (points.Length >= 2) {
                 CheckBufferLimitMode(points.Length, PrimitiveType.LineList, defaultTexture);
                 for (int i = 0; i < points.Length - 1; i++) {
@@ -312,7 +311,7 @@ namespace NQuad
             }
         }
 
-        public static void DrawCircle(in float centerX, in float centerY, in float radius, in Color color) {
+        public static void Circle(float centerX, float centerY, float radius, Color color) {
             CheckBufferLimitMode(108, PrimitiveType.TriangleList, defaultTexture);
             const float stepLength = 10f;
             float angle = 0f;
@@ -323,11 +322,37 @@ namespace NQuad
                 angle += stepLength;
             }
         }
-        public static void DrawCircleSector(in Vector2 center, float radius, int startAngle, int endAngle, int segments, in Color color) {
+        public static void Circle(Vector2 center, float radius, Color color) {
+            CheckBufferLimitMode(108, PrimitiveType.TriangleList, defaultTexture);
+            const float stepLength = 10f;
+            float angle = 0f;
+            for (int i = 0; i < 36; i++) {
+                data[index++].Set(center.X, center.Y, 0, 0, color);
+                data[index++].Set(center.X + (float)Math.Sin(DEG2RAD * angle) * radius, center.Y + (float)Math.Cos(DEG2RAD * angle) * radius, 0, 0, color);
+                data[index++].Set(center.X + (float)Math.Sin(DEG2RAD * (angle + stepLength)) * radius, center.Y + (float)Math.Cos(DEG2RAD * (angle + stepLength)) * radius, 0, 0, color);
+                angle += stepLength;
+            }
+        }
+        public static void CircleLines(float centerX, float centerY, float radius, Color color) {
+            CheckBufferLimitMode(72, PrimitiveType.LineList, defaultTexture);
+            for (int i = 0; i < 360; i += 10) {
+                data[index++].Set(centerX + (float)Math.Sin(DEG2RAD * i) * radius, centerY + (float)Math.Cos(DEG2RAD * i) * radius, 0, 0, color);
+                data[index++].Set(centerX + (float)Math.Sin(DEG2RAD * (i + 10)) * radius, centerY + (float)Math.Cos(DEG2RAD * (i + 10)) * radius, 0, 0, color);
+            }
+        }
+        public static void CircleGradient(float centerX, float centerY, float radius, Color color1, Color color2) {
+            CheckBufferLimitMode(108, PrimitiveType.TriangleList, defaultTexture);
+            for (int i = 0; i < 360; i += 10) {
+                data[index++].Set(centerX, centerY, 0, 0, color1);
+                data[index++].Set(centerX + (float)Math.Sin(DEG2RAD * i) * radius, (float)centerY + (float)Math.Cos(DEG2RAD * i) * radius, 0, 0, color2);
+                data[index++].Set(centerX + (float)Math.Sin(DEG2RAD * (i + 10)) * radius, (float)centerY + (float)Math.Cos(DEG2RAD * (i + 10)) * radius, 0, 0, color2);
+            }
+        }
+        public static void CircleSector(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color color) {
             CheckBufferLimitMode(segments * 3, PrimitiveType.TriangleList, defaultTexture);
             if (radius <= 0.0f) radius = 0.1f;
             if (endAngle < startAngle) {
-                int tmp = startAngle;
+                float tmp = startAngle;
                 startAngle = endAngle;
                 endAngle = tmp;
             }
@@ -347,11 +372,11 @@ namespace NQuad
                 angle += stepLength;
             }
         }
-        public static void DrawCircleSectorLines(in Vector2 center, float radius, int startAngle, int endAngle, int segments, in Color color) {
+        public static void CircleSectorLines(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color color) {
             if (radius <= 0.0f) radius = 0.1f;
 
             if (endAngle < startAngle) {
-                int tmp = startAngle;
+                float tmp = startAngle;
                 startAngle = endAngle;
                 endAngle = tmp;
             }
@@ -389,34 +414,8 @@ namespace NQuad
                 data[index++].Set(center.X + (float)Math.Sin(DEG2RAD * angle) * radius, center.Y + (float)Math.Cos(DEG2RAD * angle) * radius, 0, 0, color);
             }
         }
-        public static void DrawCircleGradient(in float centerX, in float centerY, in float radius, in Color color1, in Color color2) {
-            CheckBufferLimitMode(108, PrimitiveType.TriangleList, defaultTexture);
-            for (int i = 0; i < 360; i += 10) {
-                data[index++].Set(centerX, centerY, 0, 0, color1);
-                data[index++].Set(centerX + (float)Math.Sin(DEG2RAD * i) * radius, (float)centerY + (float)Math.Cos(DEG2RAD * i) * radius, 0, 0, color2);
-                data[index++].Set(centerX + (float)Math.Sin(DEG2RAD * (i + 10)) * radius, (float)centerY + (float)Math.Cos(DEG2RAD * (i + 10)) * radius, 0, 0, color2);
-            }
-        }
-        public static void DrawCircleV(in Vector2 center, in float radius, in Color color) {
-            CheckBufferLimitMode(108, PrimitiveType.TriangleList, defaultTexture);
-            const float stepLength = 10f;
-            float angle = 0f;
-            for (int i = 0; i < 36; i++) {
-                data[index++].Set(center.X, center.Y, 0, 0, color);
-                data[index++].Set(center.X + (float)Math.Sin(DEG2RAD * angle) * radius, center.Y + (float)Math.Cos(DEG2RAD * angle) * radius, 0, 0, color);
-                data[index++].Set(center.X + (float)Math.Sin(DEG2RAD * (angle + stepLength)) * radius, center.Y + (float)Math.Cos(DEG2RAD * (angle + stepLength)) * radius, 0, 0, color);
-                angle += stepLength;
-            }
-        }
-        public static void DrawCircleLines(in float centerX, in float centerY, in float radius, in Color color) {
-            CheckBufferLimitMode(72, PrimitiveType.LineList, defaultTexture);
-            for (int i = 0; i < 360; i += 10) {
-                data[index++].Set(centerX + (float)Math.Sin(DEG2RAD * i) * radius, centerY + (float)Math.Cos(DEG2RAD * i) * radius, 0, 0, color);
-                data[index++].Set(centerX + (float)Math.Sin(DEG2RAD * (i + 10)) * radius, centerY + (float)Math.Cos(DEG2RAD * (i + 10)) * radius, 0, 0, color);
-            }
-        }
 
-        public static void DrawEllipse(in float centerX, in float centerY, in float radiusH, in float radiusV, in Color color) {
+        public static void Ellipse(float centerX, float centerY, float radiusH, float radiusV, Color color) {
             CheckBufferLimitMode(108, PrimitiveType.TriangleList, defaultTexture);
             for (int i = 0; i < 360; i += 10) {
                 data[index++].Set((float)centerX, (float)centerY, 0, 0, color);
@@ -425,7 +424,7 @@ namespace NQuad
             }
 
         }
-        public static void DrawEllipseLines(in float centerX, in float centerY, in float radiusH, in float radiusV, in Color color) {
+        public static void EllipseLines(float centerX, float centerY, float radiusH, float radiusV, Color color) {
             CheckBufferLimitMode(72, PrimitiveType.LineList, defaultTexture);
 
             for (int i = 0; i < 360; i += 10) {
@@ -434,7 +433,7 @@ namespace NQuad
             }
         }
 
-        public static void DrawRing(in Vector2 center, float innerRadius, float outerRadius, int startAngle, int endAngle, int segments, in Color color) {
+        public static void Ring(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, int segments, Color color) {
             if (startAngle == endAngle) return;
 
             if (outerRadius < innerRadius) {
@@ -446,7 +445,7 @@ namespace NQuad
             }
 
             if (endAngle < startAngle) {
-                int tmp = startAngle;
+                float tmp = startAngle;
                 startAngle = endAngle;
                 endAngle = tmp;
             }
@@ -459,7 +458,7 @@ namespace NQuad
             }
 
             if (innerRadius <= 0.0f) {
-                DrawCircleSector(center, outerRadius, startAngle, endAngle, segments, color);
+                CircleSector(center, outerRadius, startAngle, endAngle, segments, color);
                 return;
             }
 
@@ -482,7 +481,7 @@ namespace NQuad
             }
 
         }
-        public static void DrawRingLines(in Vector2 center, float innerRadius, float outerRadius, int startAngle, int endAngle, int segments, in Color color) {
+        public static void RingLines(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, int segments, Color color) {
             if (startAngle == endAngle) return;
 
             if (outerRadius < innerRadius) {
@@ -494,7 +493,7 @@ namespace NQuad
             }
 
             if (endAngle < startAngle) {
-                int tmp = startAngle;
+                float tmp = startAngle;
                 startAngle = endAngle;
                 endAngle = tmp;
             }
@@ -507,7 +506,7 @@ namespace NQuad
             }
 
             if (innerRadius <= 0.0f) {
-                DrawCircleSectorLines(center, outerRadius, startAngle, endAngle, segments, color);
+                CircleSectorLines(center, outerRadius, startAngle, endAngle, segments, color);
                 return;
             }
 
@@ -541,7 +540,7 @@ namespace NQuad
 
         }
 
-        public static void DrawRectangle(in float positionX, in float positionY, in float sizeX, in float sizeY, in Color color) {
+        public static void Rectangle(float positionX, float positionY, float sizeX, float sizeY, Color color) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, defaultTexture);
             float right = positionX + sizeX;
             float down = positionY + sizeY;
@@ -553,7 +552,7 @@ namespace NQuad
             data[index++].Set(right, down, 0, 0, color);
             data[index++].Set(positionX, down, 0, 0, color);
         }
-        public static void DrawRectangleV(in Vector2 position, in Vector2 size, in Color color) {
+        public static void Rectangle(Vector2 position, Vector2 size, Color color) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, defaultTexture);
             float right = position.X + size.X;
             float down = position.Y + size.Y;
@@ -565,27 +564,16 @@ namespace NQuad
             data[index++].Set(right, down, 0, 0, color);
             data[index++].Set(position.X, down, 0, 0, color);
         }
-        public static void DrawRectangleRec(in Rectangle rec, in Color color) {
-            CheckBufferLimitMode(6, PrimitiveType.TriangleList, defaultTexture);
-
-            data[index++].Set(rec.X, rec.Y, 0, 0, color);
-            data[index++].Set(rec.Right, rec.Y, 0, 0, color);
-            data[index++].Set(rec.X, rec.Bottom, 0, 0, color);
-
-            data[index++].Set(rec.Right, rec.Y, 0, 0, color);
-            data[index++].Set(rec.Right, rec.Bottom, 0, 0, color);
-            data[index++].Set(rec.X, rec.Bottom, 0, 0, color);
-        }
-        public static void DrawRectanglePro(in Rectangle rec, Vector2 origin, in float rotation, in Color color) {
+        public static void Rectangle(float recX, float recY, float recWidth, float recHeight, Vector2 origin, float rotation, Color color) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, defaultTexture);
             origin = -origin;
             float cos = (float)Math.Cos(rotation * DEG2RAD);
             float sin = (float)Math.Sin(rotation * DEG2RAD);
 
-            Vector2 TL = new Vector2(rec.X + origin.X * cos - origin.Y * sin, rec.Y + origin.X * sin + origin.Y * cos);
-            Vector2 TR = new Vector2(rec.X + (origin.X + rec.Width) * cos - origin.Y * sin, rec.Y + (origin.X + rec.Width) * sin + origin.Y * cos);
-            Vector2 BL = new Vector2(rec.X + origin.X * cos - (origin.Y + rec.Height) * sin, rec.Y + origin.X * sin + (origin.Y + rec.Height) * cos);
-            Vector2 BR = new Vector2(rec.X + (origin.X + rec.Width) * cos - (origin.Y + rec.Height) * sin, rec.Y + (origin.X + rec.Width) * sin + (origin.Y + rec.Height) * cos);
+            Vector2 TL = new Vector2(recX + origin.X * cos - origin.Y * sin, recY + origin.X * sin + origin.Y * cos);
+            Vector2 TR = new Vector2(recX + (origin.X + recWidth) * cos - origin.Y * sin, recY + (origin.X + recWidth) * sin + origin.Y * cos);
+            Vector2 BL = new Vector2(recX + origin.X * cos - (origin.Y + recHeight) * sin, recY + origin.X * sin + (origin.Y + recHeight) * cos);
+            Vector2 BR = new Vector2(recX + (origin.X + recWidth) * cos - (origin.Y + recHeight) * sin, recY + (origin.X + recWidth) * sin + (origin.Y + recHeight) * cos);
 
 
             data[index++].Set(TL.X, TL.Y, 0, 0, color);  //TL
@@ -596,24 +584,7 @@ namespace NQuad
             data[index++].Set(BR.X, BR.Y, 0, 0, color);  //DR
             data[index++].Set(BL.X, BL.Y, 0, 0, color);  //DL
         }
-        public static void DrawRectangleGradientV(in float posX, in float posY, in float width, in float height, in Color color1, in Color color2) {
-            DrawRectangleGradientEx(new Rectangle((int)posX, (int)posY, (int)width, (int)height), color1, color2, color2, color1);
-        }
-        public static void DrawRectangleGradientH(in float posX, in float posY, in float width, in float height, in Color color1, in Color color2) {
-            DrawRectangleGradientEx(new Rectangle((int)posX, (int)posY, (int)width, (int)height), color1, color1, color2, color2);
-        }
-        public static void DrawRectangleGradientEx(in Rectangle rec, in Color col1, in Color col2, in Color col3, in Color col4) {
-            CheckBufferLimitMode(6, PrimitiveType.TriangleList, defaultTexture);
-
-            data[index++].Set(rec.X, rec.Y, 0, 0, col1);               //TL
-            data[index++].Set(rec.Right, rec.Y, 0, 0, col4);           //TR
-            data[index++].Set(rec.X, rec.Bottom, 0, 0, col2);          //DL
-
-            data[index++].Set(rec.Right, rec.Y, 0, 0, col4);           //TR
-            data[index++].Set(rec.Right, rec.Bottom, 0, 0, col3);      //DR
-            data[index++].Set(rec.X, rec.Bottom, 0, 0, col2);          //DL
-        }
-        public static void DrawRectangleLines(in float posX, in float posY, in float width, in float height, in Color color) {
+        public static void RectangleLines(float posX, float posY, float width, float height, Color color) {
             CheckBufferLimitMode(8, PrimitiveType.LineList, defaultTexture);
 
             data[index++].Set(posX + 1, posY + 1, 0, 0, color);
@@ -628,26 +599,26 @@ namespace NQuad
             data[index++].Set(posX + 1, posY + height, 0, 0, color);
             data[index++].Set(posX + 1, posY + 1, 0, 0, color);
         }
-        public static void DrawRectangleLinesEx(in Rectangle rec, int lineThick, in Color color) {
-            if (lineThick > rec.Width || lineThick > rec.Height) {
-                if (rec.Width > rec.Height) lineThick = (int)rec.Height / 2;
-                else if (rec.Width < rec.Height) lineThick = (int)rec.Width / 2;
+        public static void RectangleLines(float recX, float recY, float recWidth, float recHeight, float lineThick, Color color) {
+            if (lineThick > recWidth || lineThick > recHeight) {
+                if (recWidth > recHeight) lineThick = recHeight / 2;
+                else if (recWidth < recHeight) lineThick = recWidth / 2;
             }
 
-            DrawRectangle(rec.X, rec.Y, rec.Width, lineThick, color);
-            DrawRectangle((rec.X - lineThick + rec.Width), (rec.Y + lineThick), lineThick, (rec.Height - lineThick * 2.0f), color);
-            DrawRectangle(rec.X, (rec.Y + rec.Height - lineThick), rec.Width, lineThick, color);
-            DrawRectangle(rec.X, (rec.Y + lineThick), lineThick, (rec.Height - lineThick * 2), color);
+            Rectangle(recX, recY, recWidth, lineThick, color);
+            Rectangle((recX - lineThick + recWidth), (recY + lineThick), lineThick, (recHeight - lineThick * 2.0f), color);
+            Rectangle(recX, (recY + recHeight - lineThick), recWidth, lineThick, color);
+            Rectangle(recX, (recY + lineThick), lineThick, (recHeight - lineThick * 2), color);
         }
-        public static void DrawRectangleRounded(in Rectangle rec, float roundness, int segments, in Color color) {
-            if ((roundness <= 0.0f) || (rec.Width < 1) || (rec.Height < 1)) {
-                DrawRectangleRec(rec, color);
+        public static void RectangleRounded(float recX, float recY, float recWidth, float recHeight, float roundness, int segments, Color color) {
+            if ((roundness <= 0.0f) || (recWidth < 1) || (recHeight < 1)) {
+                Rectangle(recX, recY, recWidth, recHeight, color);
                 return;
             }
 
             if (roundness >= 1.0f) roundness = 1.0f;
 
-            float radius = (rec.Width > rec.Height) ? (rec.Height * roundness) / 2 : (rec.Width * roundness) / 2;
+            float radius = (recWidth > recHeight) ? (recHeight * roundness) / 2 : (recWidth * roundness) / 2;
             if (radius <= 0.0f) return;
 
             if (segments < 4) {
@@ -675,19 +646,18 @@ namespace NQuad
              */
 
             Vector2[] point = {
-                new Vector2(rec.X + radius, rec.Y), new Vector2((rec.X + rec.Width) - radius, rec.Y), new Vector2( rec.X + rec.Width, rec.Y + radius ), // PO, P1, P2
-                new Vector2(rec.X + rec.Width, (rec.Y + rec.Height) - radius), new Vector2((rec.X + rec.Width) - radius, rec.Y + rec.Height), // P3, P4
-                new Vector2(rec.X + radius, rec.Y + rec.Height), new Vector2( rec.X, rec.Y + rec.Height - radius), new Vector2(rec.X, rec.Y + radius), // P5, P6, P7
-                new Vector2(rec.X + radius, rec.Y + radius), new Vector2((rec.X + rec.Width) - radius, rec.Y + radius), // P8, P9
-                new Vector2(rec.X + rec.Width - radius, (rec.Y + rec.Height) - radius), new Vector2(rec.X + radius, (rec.Y + rec.Height) - radius) // P10, P11
+                new Vector2(recX + radius, recY), new Vector2((recX + recWidth) - radius, recY), new Vector2( recX + recWidth, recY + radius ), // PO, P1, P2
+                new Vector2(recX + recWidth, (recY + recHeight) - radius), new Vector2((recX + recWidth) - radius, recY + recHeight), // P3, P4
+                new Vector2(recX + radius, recY + recHeight), new Vector2( recX, recY + recHeight - radius), new Vector2(recX, recY + radius), // P5, P6, P7
+                new Vector2(recX + radius, recY + radius), new Vector2((recX + recWidth) - radius, recY + radius), // P8, P9
+                new Vector2(recX + recWidth - radius, (recY + recHeight) - radius), new Vector2(recX + radius, (recY + recHeight) - radius) // P10, P11
             };
 
             Vector2[] centers = { point[8], point[9], point[10], point[11] };
-            float[] angles = { 180.0f, 90.0f, 0.0f, 270.0f };
 
             CheckBufferLimitMode(12 * segments + 30, PrimitiveType.TriangleList, defaultTexture);
             for (int k = 0; k < 4; ++k) {
-                float angle = angles[k];
+                float angle = anglesRectangleRound[k];
                 Vector2 center = centers[k];
                 for (int i = 0; i < segments; i++) {
                     data[index++].Set(center.X, center.Y, 0, 0, color);
@@ -733,19 +703,19 @@ namespace NQuad
             data[index++].Set(point[10].X, point[10].Y, 0, 0, color);
 
         }
-        public static void DrawRectangleRoundedLines(in Rectangle rec, float roundness, int segments, int lineThick, in Color color) {
+        public static void RectangleRoundedLines(float recX, float recY, float recWidth, float recHeight, float roundness, int segments, int lineThick, Color color) {
             if (lineThick < 0) lineThick = 0;
 
             // Not a rounded rectangle
             if (roundness <= 0.0f) {
-                DrawRectangleLinesEx(new Rectangle(rec.X - lineThick, rec.Y - lineThick, rec.Width + 2 * lineThick, rec.Height + 2 * lineThick), lineThick, color);
+                RectangleLines(recX - lineThick, recY - lineThick, recWidth + 2 * lineThick, recHeight + 2 * lineThick, lineThick, color);
                 return;
             }
 
             if (roundness >= 1.0f) roundness = 1.0f;
 
             // Calculate corner radius
-            float radius = (rec.Width > rec.Height) ? (rec.Height * roundness) / 2 : (rec.Width * roundness) / 2;
+            float radius = (recWidth > recHeight) ? (recHeight * roundness) / 2 : (recWidth * roundness) / 2;
             if (radius <= 0.0f) return;
 
             // Calculate number of segments to use for the corners
@@ -760,26 +730,24 @@ namespace NQuad
             float outerRadius = radius + (float)lineThick, innerRadius = radius;
 
             Vector2[] point = {
-                new Vector2(rec.X + innerRadius, rec.Y - lineThick), new Vector2((rec.X + rec.Width) - innerRadius, rec.Y - lineThick), new Vector2( rec.X + rec.Width + lineThick, rec.Y + innerRadius ), // PO, P1, P2
-                new Vector2(rec.X + rec.Width + lineThick, (rec.Y + rec.Height) - innerRadius), new Vector2((rec.X + rec.Width) - innerRadius, rec.Y + rec.Height + lineThick), // P3, P4
-                new Vector2(rec.X + innerRadius, rec.Y + rec.Height + lineThick), new Vector2(rec.X - lineThick, (rec.Y + rec.Height) - innerRadius), new Vector2(rec.X - lineThick, rec.Y + innerRadius), // P5, P6, P7
-                new Vector2(rec.X + innerRadius, rec.Y), new Vector2((rec.X + rec.Width) - innerRadius, rec.Y), // P8, P9
-                new Vector2( rec.X + rec.Width, rec.Y + innerRadius ), new Vector2(rec.X + rec.Width, (rec.Y + rec.Height) - innerRadius), // P10, P11
-                new Vector2((rec.X + rec.Width) - innerRadius, rec.Y + rec.Height), new Vector2(rec.X + innerRadius, rec.Y + rec.Height), // P12, P13
-                new Vector2(rec.X, (rec.Y + rec.Height) - innerRadius), new Vector2(rec.X, rec.Y + innerRadius) // P14, P15
+                new Vector2(recX + innerRadius, recY - lineThick), new Vector2((recX + recWidth) - innerRadius, recY - lineThick), new Vector2( recX + recWidth + lineThick, recY + innerRadius ), // PO, P1, P2
+                new Vector2(recX + recWidth + lineThick, (recY + recHeight) - innerRadius), new Vector2((recX + recWidth) - innerRadius, recY + recHeight + lineThick), // P3, P4
+                new Vector2(recX + innerRadius, recY + recHeight + lineThick), new Vector2(recX - lineThick, (recY + recHeight) - innerRadius), new Vector2(recX - lineThick, recY + innerRadius), // P5, P6, P7
+                new Vector2(recX + innerRadius, recY), new Vector2((recX + recWidth) - innerRadius, recY), // P8, P9
+                new Vector2(recX + recWidth, recY + innerRadius ), new Vector2(recX + recWidth, (recY + recHeight) - innerRadius), // P10, P11
+                new Vector2(recX + recWidth - innerRadius, recY + recHeight), new Vector2(recX + innerRadius, recY + recHeight), // P12, P13
+                new Vector2(recX, (recY + recHeight) - innerRadius), new Vector2(recX, recY + innerRadius) // P14, P15
             };
 
             Vector2[] centers = {
-                new Vector2(rec.X + innerRadius, rec.Y + innerRadius), new Vector2(rec.X + rec.Width - innerRadius, rec.Y + innerRadius), // P16, P17
-                new Vector2(rec.X + rec.Width - innerRadius, rec.Y + rec.Height - innerRadius), new Vector2(rec.X + innerRadius, rec.Y + rec.Height  - innerRadius) // P18, P19
+                new Vector2(recX + innerRadius, recY + innerRadius), new Vector2(recX + recWidth - innerRadius, recY + innerRadius), // P16, P17
+                new Vector2(recX + recWidth - innerRadius, recY + recHeight - innerRadius), new Vector2(recX + innerRadius, recY + recHeight  - innerRadius) // P18, P19
             };
-
-            float[] angles = { 180.0f, 90.0f, 0.0f, 270.0f };
 
             if (lineThick > 1) {
                 CheckBufferLimitMode(24 * segments + 24, PrimitiveType.TriangleList, defaultTexture);
                 for (int k = 0; k < 4; ++k) {
-                    float angle = angles[k];
+                    float angle = anglesRectangleRound[k];
                     Vector2 center = centers[k];
 
                     for (int i = 0; i < segments; i++) {
@@ -827,7 +795,7 @@ namespace NQuad
                 CheckBufferLimitMode(8 * segments + 8, PrimitiveType.LineList, defaultTexture);
 
                 for (int k = 0; k < 4; ++k) {
-                    float angle = angles[k];
+                    float angle = anglesRectangleRound[k];
                     Vector2 center = centers[k];
 
                     for (int i = 0; i < segments; i++) {
@@ -845,14 +813,14 @@ namespace NQuad
             }
         }
 
-        public static void DrawTriangle(in Vector2 v1, in Vector2 v2, in Vector2 v3, in Color color) {
+        public static void Triangle(Vector2 v1, Vector2 v2, Vector2 v3, Color color) {
             CheckBufferLimitMode(3, PrimitiveType.TriangleList, defaultTexture);
 
             data[index++].Set(v1.X, v1.Y, 0, 0, color);
             data[index++].Set(v2.X, v2.Y, 0, 0, color);
             data[index++].Set(v3.X, v3.Y, 0, 0, color);
         }
-        public static void DrawTriangleLines(in Vector2 v1, in Vector2 v2, in Vector2 v3, in Color color) {
+        public static void TriangleLines(Vector2 v1, Vector2 v2, Vector2 v3, Color color) {
             CheckBufferLimitMode(6, PrimitiveType.LineList, defaultTexture);
 
             data[index++].Set(v1.X, v1.Y, 0, 0, color);
@@ -863,7 +831,7 @@ namespace NQuad
             data[index++].Set(v3.X, v3.Y, 0, 0, color);
             data[index++].Set(v1.X, v1.Y, 0, 0, color);
         }
-        public static void DrawTriangleFan(in Vector2[] points, in Color color) {
+        public static void TriangleFan(Vector2[] points, Color color) {
             if (points.Length >= 3) {
                 CheckBufferLimitMode((points.Length - 2) * 6, PrimitiveType.TriangleList, defaultTexture);
                 for (int i = 1; i < points.Length - 1; i++) {
@@ -879,7 +847,7 @@ namespace NQuad
 
             }
         }
-        public static void DrawTriangleFan(in Vector2[] points, in Vector2 center, in Color color) {
+        public static void TriangleFan(Vector2[] points, Vector2 center, Color color) {
             if (points.Length >= 3) {
                 CheckBufferLimitMode((points.Length - 2) * 6, PrimitiveType.TriangleList, defaultTexture);
                 for (int i = 1; i < points.Length - 1; i++) {
@@ -888,14 +856,14 @@ namespace NQuad
                     data[index++].Set(points[i + 1].X + center.X, points[i + 1].Y + center.Y, 0, 0, color);   //TR
                     data[index++].Set(points[i].X + center.X, points[i].Y + center.Y, 0, 0, color);           //DL
 
-                    data[index++].Set(points[i + 1].X+ center.X, points[i + 1].Y + center.Y, 0, 0, color);   //TR
+                    data[index++].Set(points[i + 1].X + center.X, points[i + 1].Y + center.Y, 0, 0, color);   //TR
                     data[index++].Set(points[i + 1].X + center.X, points[i + 1].Y + center.Y, 0, 0, color);   //DR
                     data[index++].Set(points[i].X + center.X, points[i].Y + center.Y, 0, 0, color);           //DL
                 }
 
             }
         }
-        public static void DrawTriangleStrip(in Vector2[] points, in Color color) {
+        public static void TriangleStrip(Vector2[] points, Color color) {
             if (points.Length >= 3) {
                 CheckBufferLimitMode(3 * (points.Length - 2), PrimitiveType.TriangleList, defaultTexture);
 
@@ -913,7 +881,7 @@ namespace NQuad
             }
         }
 
-        public static void DrawPoly(in Vector2 center, int sides, in float radius, in float rotation, in Color color) {
+        public static void Poly(Vector2 center, int sides, float radius, float rotation, Color color) {
             if (sides < 3) sides = 3;
             float centralAngle = 0.0f;
             float cos = (float)Math.Cos(rotation * DEG2RAD);
@@ -932,7 +900,7 @@ namespace NQuad
             }
 
         }
-        public static void DrawPolyLines(in Vector2 center, int sides, in float radius, in float rotation, in Color color) {
+        public static void PolyLines(Vector2 center, int sides, float radius, float rotation, Color color) {
             if (sides < 3) sides = 3;
             float centralAngle = 0.0f;
             float cos = (float)Math.Cos(rotation * DEG2RAD);
@@ -950,7 +918,7 @@ namespace NQuad
 
         }
 
-        public static void DrawTexture(in Texture2D texture, in float positionX, in float positionY, in Color color) {
+        public static void Texture(Texture2D texture, float positionX, float positionY, Color color) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, texture);
             float right = positionX + texture.Width;
             float down = positionY + texture.Height;
@@ -964,7 +932,7 @@ namespace NQuad
             data[index++].Set(positionX, down, 0, 1, color);
 
         }
-        private static void DrawTextureInternal(in float positionX, in float positionY, in float right, in float down, in Color color, in TextureFlip flip = TextureFlip.None) {
+        private static void TextureInternal(float positionX, float positionY, float right, float down, Color color, TextureFlip flip = TextureFlip.None) {
 
             switch (flip) {
                 case TextureFlip.None:
@@ -1005,38 +973,38 @@ namespace NQuad
                     break;
             }
         }
-        public static void DrawTexture(in Texture2D texture, in float positionX, in float positionY, in Color color, in TextureFlip flip = TextureFlip.None) {
+        public static void Texture(Texture2D texture, float positionX, float positionY, Color color, TextureFlip flip = TextureFlip.None) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, texture);
             float right = positionX + texture.Width;
             float down = positionY + texture.Height;
 
-            DrawTextureInternal(positionX, positionY, right, down, color, flip);
+            TextureInternal(positionX, positionY, right, down, color, flip);
 
         }
-        public static void DrawTexture(in Texture2D texture, in Vector2 position, in Color color, in TextureFlip flip = TextureFlip.None) {
+        public static void Texture(Texture2D texture, Vector2 position, Color color, TextureFlip flip = TextureFlip.None) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, texture);
             float right = position.X + texture.Width;
             float down = position.Y + texture.Height;
-            DrawTextureInternal(position.X, position.Y, right, down, color, flip);
+            TextureInternal(position.X, position.Y, right, down, color, flip);
         }
-        public static void DrawTexture(in Texture2D texture, in Vector2 position, in Vector2 origin, in float scale, in Color color, in TextureFlip flip = TextureFlip.None) {
+        public static void Texture(Texture2D texture, Vector2 position, Vector2 origin, float scale, Color color, TextureFlip flip = TextureFlip.None) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, texture);
             float posX = position.X - origin.X;
             float posY = position.Y - origin.Y;
             float right = posX + (texture.Width * scale);
             float down = posY + (texture.Height * scale);
-            DrawTextureInternal(posX, posY, right, down, color, flip);
+            TextureInternal(posX, posY, right, down, color, flip);
 
         }
-        public static void DrawTexture(in Texture2D texture, in Vector2 position, in Vector2 origin, in Vector2 scale, in Color color, in TextureFlip flip = TextureFlip.None) {
+        public static void Texture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, Color color, TextureFlip flip = TextureFlip.None) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, texture);
             float posX = position.X - origin.X;
             float posY = position.Y - origin.Y;
             float right = posX + (texture.Width * scale.X);
             float down = posY + (texture.Height * scale.Y);
-            DrawTextureInternal(posX, posY, right, down, color, flip);
+            TextureInternal(posX, posY, right, down, color, flip);
         }
-        public static void DrawTexture(in Texture2D texture, in Vector2 position, Vector2 origin, in Vector2 scale, in float rotation, in Color color, in TextureFlip flip = TextureFlip.None) {
+        public static void Texture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, float rotation, Color color, TextureFlip flip = TextureFlip.None) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, texture);
             origin = -origin;
             float cos = (float)Math.Cos(rotation * DEG2RAD);
@@ -1088,7 +1056,7 @@ namespace NQuad
             }
 
         }
-        public static void DrawTexture(in Texture2D texture, in Rectangle? source, in Rectangle dest, in Color color, in TextureFlip flip = TextureFlip.None) {
+        public static void Texture(Texture2D texture, Rectangle? source, float destX, float destY, float destWidth, float destHeight, Color color, TextureFlip flip = TextureFlip.None) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, texture);
 
             Vector2 _texCoordTL;
@@ -1115,15 +1083,18 @@ namespace NQuad
                 _texCoordTL.X = temp;
             }
 
-            data[index++].Set(dest.X, dest.Y, _texCoordTL.X, _texCoordTL.Y, color);
-            data[index++].Set(dest.Right, dest.Y, _texCoordBR.X, _texCoordTL.Y, color);
-            data[index++].Set(dest.X, dest.Bottom, _texCoordTL.X, _texCoordBR.Y, color);
+            float destRight = destX + destWidth;
+            float destBottom = destY + destHeight;
 
-            data[index++].Set(dest.Right, dest.Y, _texCoordBR.X, _texCoordTL.Y, color);
-            data[index++].Set(dest.Right, dest.Bottom, _texCoordBR.X, _texCoordBR.Y, color);
-            data[index++].Set(dest.X, dest.Bottom, _texCoordTL.X, _texCoordBR.Y, color);
+            data[index++].Set(destX, destY, _texCoordTL.X, _texCoordTL.Y, color);
+            data[index++].Set(destRight, destY, _texCoordBR.X, _texCoordTL.Y, color);
+            data[index++].Set(destX, destBottom, _texCoordTL.X, _texCoordBR.Y, color);
+
+            data[index++].Set(destRight, destY, _texCoordBR.X, _texCoordTL.Y, color);
+            data[index++].Set(destRight, destBottom, _texCoordBR.X, _texCoordBR.Y, color);
+            data[index++].Set(destX, destBottom, _texCoordTL.X, _texCoordBR.Y, color);
         }
-        public static void DrawTexture(in Texture2D texture, in Rectangle? source, in Rectangle dest, in Vector2 origin, in float rotation, in Color color, in TextureFlip flip = TextureFlip.None) {
+        public static void Texture(Texture2D texture, Rectangle? source, float destX, float destY, float destWidth, float destHeight, Vector2 origin, float rotation, Color color, TextureFlip flip = TextureFlip.None) {
             CheckBufferLimitMode(6, PrimitiveType.TriangleList, texture);
 
             Vector2 _texCoordTL;
@@ -1153,10 +1124,10 @@ namespace NQuad
             float cos = (float)Math.Cos(rotation * DEG2RAD);
             float sin = (float)Math.Sin(rotation * DEG2RAD);
 
-            Vector2 TL = new Vector2(dest.X + origin.X * cos - origin.Y * sin, dest.Y + origin.X * sin + origin.Y * cos);
-            Vector2 TR = new Vector2(dest.X + (origin.X + dest.Width) * cos - origin.Y * sin, dest.Y + (origin.X + dest.Width) * sin + origin.Y * cos);
-            Vector2 BL = new Vector2(dest.X + origin.X * cos - (origin.Y + dest.Height) * sin, dest.Y + origin.X * sin + (origin.Y + dest.Height) * cos);
-            Vector2 BR = new Vector2(dest.X + (origin.X + dest.Width) * cos - (origin.Y + dest.Height) * sin, dest.Y + (origin.X + dest.Width) * sin + (origin.Y + dest.Height) * cos);
+            Vector2 TL = new Vector2(destX + origin.X * cos - origin.Y * sin, destY + origin.X * sin + origin.Y * cos);
+            Vector2 TR = new Vector2(destX + (origin.X + destWidth) * cos - origin.Y * sin, destY + (origin.X + destWidth) * sin + origin.Y * cos);
+            Vector2 BL = new Vector2(destX + origin.X * cos - (origin.Y + destHeight) * sin, destY + origin.X * sin + (origin.Y + destHeight) * cos);
+            Vector2 BR = new Vector2(destX + (origin.X + destWidth) * cos - (origin.Y + destHeight) * sin, destY + (origin.X + destWidth) * sin + (origin.Y + destHeight) * cos);
 
             data[index++].Set(TL.X, TL.Y, _texCoordTL.X, _texCoordTL.Y, color);
             data[index++].Set(TR.X, TR.Y, _texCoordBR.X, _texCoordTL.Y, color);
@@ -1167,7 +1138,8 @@ namespace NQuad
             data[index++].Set(BL.X, BL.Y, _texCoordTL.X, _texCoordBR.Y, color);
 
         }
-        public static void DrawTexturePoly(Texture2D texture, in Vector2[] points, in Vector2[] texcoords, in Color color) {
+
+        public static void TexturePoly(Texture2D texture, Vector2[] points, Vector2[] texcoords, Color color) {
             if (points.Length >= 3) {
                 CheckBufferLimitMode((points.Length - 2) * 6, PrimitiveType.TriangleList, texture);
                 for (int i = 1; i < points.Length - 1; i++) {
@@ -1182,7 +1154,7 @@ namespace NQuad
 
             }
         }
-        public static void DrawTexturePoly(Texture2D texture, Vector2 center, in Vector2[] points, in Vector2[] texcoords, in Color color) {
+        public static void TexturePoly(Texture2D texture, Vector2 center, Vector2[] points, Vector2[] texcoords, Color color) {
             if (points.Length >= 3) {
                 CheckBufferLimitMode((points.Length - 2) * 6, PrimitiveType.TriangleList, texture);
                 for (int i = 1; i < points.Length - 1; i++) {
@@ -1198,10 +1170,10 @@ namespace NQuad
             }
         }
 
-        public static void DrawText(in string text, in float posX, in float posY, float fontSize, in Color color) {
-            DrawText(defaultFont, text, posX, posY, fontSize, color);
+        public static void Text(string text, float posX, float posY, float fontSize, Color color) {
+            Text(defaultFont, text, posX, posY, fontSize, color);
         }
-        public static void DrawText(in SpriteFont font, in string text, in float posX, in float posY, float fontSize, in Color color) {
+        public static void Text(SpriteFont font, string text, float posX, float posY, float fontSize, Color color) {
 
             Vector2 offset = Vector2.Zero;
             bool firstGlyphOfLine = true;
@@ -1214,8 +1186,7 @@ namespace NQuad
                     offset.Y += font.LineSpacing * fontSize;
                     firstGlyphOfLine = true;
                     continue;
-                }
-                else if(c == '\t') {
+                } else if (c == '\t') {
                     SpriteFont.Glyph space = font.GetGlyphs().GetValueOrDefault(' ');
                     offset.X += ((space.Width + space.RightSideBearing) * fontSize) * 4;
                     continue;
@@ -1229,7 +1200,7 @@ namespace NQuad
                 } else {
                     offset.X += font.Spacing + glyph.LeftSideBearing;
                 }
-                
+
                 Vector2 position = offset;
                 position.X += (glyph.Cropping.X * fontSize) + posX;
                 position.Y += (glyph.Cropping.Y * fontSize) + posY;
@@ -1257,27 +1228,27 @@ namespace NQuad
 
         }
 
-        public static void DrawFPS(in float posX, in float posY, in float fontSize) {
+        public static void FPS(float posX, float posY, float fontSize) {
             Color color = Color.Lime; // good fps
             int fps = (int)Core.GetFPS();
 
             if (fps < 30 && fps >= 15) color = Color.Orange;  // warning FPS
             else if (fps < 15) color = Color.Red;    // bad FPS
-            DrawText($"FPS: {fps}", posX, posY, fontSize, color);
+            Text($"FPS: {fps}", posX, posY, fontSize, color);
         }
-        public static void DrawFPS(in SpriteFont font, in float posX, in float posY, in float fontSize) {
+        public static void FPS(SpriteFont font, float posX, float posY, float fontSize) {
             Color color = Color.Lime; // good fps
             int fps = (int)Core.GetFPS();
 
             if (fps < 30 && fps >= 15) color = Color.Orange;  // warning FPS
             else if (fps < 15) color = Color.Red;    // bad FPS
-            DrawText(font, $"FPS: {fps}", posX, posY, fontSize, color);
+            Text(font, $"FPS: {fps}", posX, posY, fontSize, color);
         }
 
-        public static void DrawTextRec(in string text, in Rectangle rec, in float fontSize, in bool wordWrap, in Color color) {
-            DrawTextRec(defaultFont, text, rec, fontSize, wordWrap, color);
+        public static void TextRec(string text, Rectangle rec, float fontSize, bool wordWrap, Color color) {
+            TextRec(defaultFont, text, rec, fontSize, wordWrap, color);
         }
-        public static void DrawTextRec(in SpriteFont font, in string text, in Rectangle rec, in float fontSize, in bool wordWrap, in Color color) {
+        public static void TextRec(SpriteFont font, string text, Rectangle rec, float fontSize, bool wordWrap, Color color) {
             float textOffsetY = 0;            // Offset between lines (on line break '\n')
             float textOffsetX = 0.0f;       // Offset X to next character to draw
 
@@ -1287,10 +1258,10 @@ namespace NQuad
 
             Warp state = wordWrap ? Warp.MEASURE_STATE : Warp.DRAW_STATE;
             for (int i = 0, k = 0; i < text.Length; i++, k++) {
-                
+
                 char c = text[i];
                 SpriteFont.Glyph glyph = font.GetGlyphs().GetValueOrDefault(c);
-                
+
                 float glyphWidth = 0;
                 if (c != '\n') {
                     glyphWidth = (glyph.BoundsInTexture.Width * fontSize) + font.Spacing;
@@ -1300,7 +1271,7 @@ namespace NQuad
                     if ((c == ' ') || (c == '\t') || (c == '\n')) endLine = i;
 
                     if ((textOffsetX + glyphWidth + 1) >= rec.Width) {
-                        
+
                         endLine = (endLine < 1) ? i : endLine;
                         state = Warp.DRAW_STATE;
 
@@ -1333,7 +1304,7 @@ namespace NQuad
                         }
 
                         if ((textOffsetY + (font.LineSpacing * fontSize)) > rec.Height) break;
-                        
+
                         if ((c != ' ') && (c != '\t')) {
 
                             Vector2 position = new Vector2(rec.X + textOffsetX, rec.Y + textOffsetY);
@@ -1381,28 +1352,28 @@ namespace NQuad
 
         #region SHADER-CUSTOM FUNCTIONS
 
-        public static void BeginShader(in Effect effect) {
+        public static void BeginShader(Effect effect) {
             index = 0;
             Core.Game.GraphicsDevice.BlendState = BlendState.AlphaBlend;
             Core.Game.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             Core.Game.GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
             effect.CurrentTechnique.Passes[0].Apply();
         }
-        public static void BeginShader(in Effect effect, in BlendState blendState = null) {
+        public static void BeginShader(Effect effect, BlendState blendState = null) {
             index = 0;
             Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
             Core.Game.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             Core.Game.GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
             effect.CurrentTechnique.Passes[0].Apply();
         }
-        public static void BeginShader(in Effect effect, in BlendState blendState = null, in SamplerState samplerState = null) {
+        public static void BeginShader(Effect effect, BlendState blendState = null, SamplerState samplerState = null) {
             index = 0;
             Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
             Core.Game.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             Core.Game.GraphicsDevice.SamplerStates[0] = samplerState ?? SamplerState.PointClamp;
             effect.CurrentTechnique.Passes[0].Apply();
         }
-        public static void BeginShader(in Effect effect, in BlendState blendState = null, in RasterizerState rasterizerState = null, in SamplerState samplerState = null) {
+        public static void BeginShader(Effect effect, BlendState blendState = null, RasterizerState rasterizerState = null, SamplerState samplerState = null) {
             index = 0;
             Core.Game.GraphicsDevice.BlendState = blendState ?? BlendState.AlphaBlend;
             Core.Game.GraphicsDevice.RasterizerState = rasterizerState ?? RasterizerState.CullNone;
@@ -1410,14 +1381,14 @@ namespace NQuad
             effect.CurrentTechnique.Passes[0].Apply();
         }
 
-        public static void GenVertex(in int vertexCount, in PrimitiveType type) {
+        public static void GenVertex(int vertexCount, PrimitiveType type) {
             if (currentPrimitive != type) {
                 End();
                 currentPrimitive = type;
             } else if (index + vertexCount > data.Length)
                 End();
         }
-        public static void AddVertex(in float PositionX, in float PositionY, in float TexcoordX, in float TexcoordY, in Color color) {
+        public static void AddVertex(float PositionX, float PositionY, float TexcoordX, float TexcoordY, Color color) {
             data[index++].Set(PositionX, PositionY, TexcoordX, TexcoordY, color);
         }
 

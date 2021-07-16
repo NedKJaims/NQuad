@@ -13,7 +13,4 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utils\Core\*.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\Render\*.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)tareas.txt" />
-  </ItemGroup>
 </Project>
