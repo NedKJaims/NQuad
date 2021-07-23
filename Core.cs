@@ -32,19 +32,46 @@ namespace NQuad {
 #if TOUCH
         private static TouchCollection TouchState { get; set; }
 #endif
-        private static DateTime time { get; set; }
         private static GameTime timeGame { get; set; }
 
         private static Random random { get; set; }
 
-        public static void InitCore(Game game, GraphicsDeviceManager manager, string title, int width, int height, WindowConfigFlag windowConfigFlag, string contentLocationFolder = "Content") {
+        public static void InitCore(Game game, string title, int width, int height, WindowConfigFlag windowConfigFlag, string contentLocationFolder = "Content", int msaaCount = 2) {
             Game = game;
+            Graphics = new GraphicsDeviceManager(Game);
             Game.Content.RootDirectory = contentLocationFolder;
-            Graphics = manager;
+            
+            Graphics.DeviceCreated += (e, p) => {
+                Render.InitRender();
+                
+                if ((windowConfigFlag & WindowConfigFlag.VSYNC) > 0) Graphics.SynchronizeWithVerticalRetrace = true;
+                else Graphics.SynchronizeWithVerticalRetrace = false;
 
-            Render.InitRender();
+                if ((windowConfigFlag & WindowConfigFlag.FULLSCREEN_MODE) > 0) Graphics.IsFullScreen = true;
+
+                if ((windowConfigFlag & WindowConfigFlag.WINDOW_RESIZABLE) > 0) Game.Window.AllowUserResizing = true;
+                else Game.Window.AllowUserResizing = false;
+
+                if ((windowConfigFlag & WindowConfigFlag.WINDOW_UNDECORATED) > 0) Game.Window.IsBorderless = true;
+
+                if ((windowConfigFlag & WindowConfigFlag.FIXED_TIME_STEP) > 0) Game.IsFixedTimeStep = true;
+                else Game.IsFixedTimeStep = false;
+
+                if ((windowConfigFlag & WindowConfigFlag.MSAA) > 0) {
+                    Graphics.PreferMultiSampling = true;
+                    Graphics.GraphicsDevice.PresentationParameters.MultiSampleCount = msaaCount;
+                }
+                else Graphics.PreferMultiSampling = false;
+
+                if ((windowConfigFlag & WindowConfigFlag.ALLOW_ALT_F4) > 0) Game.Window.AllowAltF4 = true;
+                else Game.Window.AllowAltF4 = false;
+
+                Graphics.PreferredBackBufferWidth = width;
+                Graphics.PreferredBackBufferHeight = height;
+                Graphics.ApplyChanges();
+            };
+
             Game.Window.Title = title;
-
             Game.IsMouseVisible = true;
 #if KEYBOARD_MOUSE
             KeyboardCurrentState = Keyboard.GetState();
@@ -57,33 +84,7 @@ namespace NQuad {
             }
             GamePadPreviouStates = new GamePadState[1];
 #endif
-            time = DateTime.Now;
-
             random = new Random();
-
-            if ((windowConfigFlag & WindowConfigFlag.VSYNC) > 0) Graphics.SynchronizeWithVerticalRetrace = true;
-            else Graphics.SynchronizeWithVerticalRetrace = false;
-
-            if ((windowConfigFlag & WindowConfigFlag.FULLSCREEN_MODE) > 0) Graphics.IsFullScreen = true;
-
-            if ((windowConfigFlag & WindowConfigFlag.WINDOW_RESIZABLE) > 0) Game.Window.AllowUserResizing = true;
-            else Game.Window.AllowUserResizing = false;
-
-            if ((windowConfigFlag & WindowConfigFlag.WINDOW_UNDECORATED) > 0) Game.Window.IsBorderless = true;
-
-            if ((windowConfigFlag & WindowConfigFlag.FIXED_TIME_STEP) > 0) Game.IsFixedTimeStep = true;
-            else Game.IsFixedTimeStep = false;
-
-            if ((windowConfigFlag & WindowConfigFlag.MSAA_4X_HINT) > 0) Graphics.PreferMultiSampling = true;
-            else Graphics.PreferMultiSampling = false;
-
-            if ((windowConfigFlag & WindowConfigFlag.ALLOW_ALT_F4) > 0) Game.Window.AllowAltF4 = true;
-            else Game.Window.AllowAltF4 = false;
-
-            Graphics.PreferredBackBufferWidth = width;
-            Graphics.PreferredBackBufferHeight = height;
-            Graphics.ApplyChanges();
-
         }
         public static void Update(GameTime gameTime) {
             timeGame = gameTime;
@@ -137,19 +138,14 @@ namespace NQuad {
                 windowConfigFlag |= WindowConfigFlag.WINDOW_UNDECORATED;
             }
 
-            if ((windowConfigFlag & WindowConfigFlag.MSAA_4X_HINT) != (flags & WindowConfigFlag.MSAA_4X_HINT) && (flags & WindowConfigFlag.MSAA_4X_HINT) > 0) {
+            if ((windowConfigFlag & WindowConfigFlag.MSAA) != (flags & WindowConfigFlag.MSAA) && (flags & WindowConfigFlag.MSAA) > 0) {
                 Graphics.PreferMultiSampling = true;
-                windowConfigFlag |= WindowConfigFlag.MSAA_4X_HINT;
+                windowConfigFlag |= WindowConfigFlag.MSAA;
             }
 
             if ((windowConfigFlag & WindowConfigFlag.FIXED_TIME_STEP) != (flags & WindowConfigFlag.FIXED_TIME_STEP) && (flags & WindowConfigFlag.FIXED_TIME_STEP) > 0) {
                 Game.IsFixedTimeStep = true;
                 windowConfigFlag |= WindowConfigFlag.FIXED_TIME_STEP;
-            }
-
-            if ((windowConfigFlag & WindowConfigFlag.ALLOW_ALT_F4) != (flags & WindowConfigFlag.ALLOW_ALT_F4) && (flags & WindowConfigFlag.ALLOW_ALT_F4) > 0) {
-                Game.Window.AllowAltF4 = true;
-                windowConfigFlag |= WindowConfigFlag.ALLOW_ALT_F4;
             }
 
             if ((windowConfigFlag & WindowConfigFlag.ALLOW_ALT_F4) != (flags & WindowConfigFlag.ALLOW_ALT_F4) && (flags & WindowConfigFlag.ALLOW_ALT_F4) > 0) {
@@ -184,9 +180,9 @@ namespace NQuad {
                 windowConfigFlag &= ~WindowConfigFlag.WINDOW_UNDECORATED;
             }
 
-            if (((windowConfigFlag & WindowConfigFlag.MSAA_4X_HINT) > 0) && ((flags & WindowConfigFlag.MSAA_4X_HINT) > 0)) {
+            if (((windowConfigFlag & WindowConfigFlag.MSAA) > 0) && ((flags & WindowConfigFlag.MSAA) > 0)) {
                 Graphics.PreferMultiSampling = false;
-                windowConfigFlag &= ~WindowConfigFlag.MSAA_4X_HINT;
+                windowConfigFlag &= ~WindowConfigFlag.MSAA;
             }
 
             if (((windowConfigFlag & WindowConfigFlag.FIXED_TIME_STEP) > 0) && ((flags & WindowConfigFlag.FIXED_TIME_STEP) > 0)) {
@@ -198,6 +194,8 @@ namespace NQuad {
                 Game.Window.AllowAltF4 = false;
                 windowConfigFlag &= ~WindowConfigFlag.ALLOW_ALT_F4;
             }
+
+            Graphics.ApplyChanges();
         }
         public static void SetWindowTitle(string title) {
             Game.Window.Title = title;
@@ -210,10 +208,10 @@ namespace NQuad {
 #endif
         }
         public static void SetTextInputEvent(EventHandler<TextInputEventArgs> eventHandler) {
-#if DESKTOP
+#if DESKTOP && KEYBOARD_MOUSE
             Game.Window.TextInput += eventHandler;
 #else
-            Println(LOG.WARNING, "This function is not available on this platform, enter the preprocessor directive DESKTOP if you use Desktop, not UWP.");
+            Println(LOG.WARNING, "This function is not available on this platform, enter the preprocessor directive DESKTOP and KEYBOARD_MOUSE if you use Desktop, not UWP.");
 #endif
         }
         public static void SetWindowSize(int width, int height) {
@@ -272,17 +270,42 @@ namespace NQuad {
         public static double GetFrameTime() {
             return timeGame.ElapsedGameTime.TotalSeconds;
         }
-        public static TimeSpan GetTime() {
-            return (DateTime.Now - time);
+        public static TimeSpan GetTimePlaying() {
+            return timeGame.TotalGameTime;
         }
         #endregion Timing-related functions
 
         #region Misc. functions
-        public static void Print(object message) {
-            Console.Write(message);
-        }
-        public static void Print(LOG type, object message) {
+        public static void Print(object message, LOG type = LOG.NONE) {
             switch (type) {
+                case LOG.NONE:
+                    Console.ResetColor();
+                    Console.Write($"{message}");
+                    break;
+                case LOG.DEBUG:
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write($"[DEBUG]: {message}");
+                    break;
+                case LOG.INFO:
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.Write($"[INFO]: {message}");
+                    break;
+                case LOG.WARNING:
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"[WARNING]: {message}");
+                    break;
+                case LOG.ERROR:
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Write($"[ERROR]: {message}");
+                    break;
+            }
+        }
+        public static void Println(object message, LOG type = LOG.NONE) {
+            switch (type) {
+                case LOG.NONE:
+                    Console.ResetColor();
+                    Console.WriteLine($"{message}");
+                    break;
                 case LOG.DEBUG:
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"[DEBUG]: {message}");
@@ -300,31 +323,6 @@ namespace NQuad {
                     Console.WriteLine($"[ERROR]: {message}");
                     break;
             }
-            Console.ResetColor();
-        }
-        public static void Println(object message) {
-            Console.WriteLine(message);
-        }
-        public static void Println(LOG type, object message) {
-            switch (type) {
-                case LOG.DEBUG:
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"[DEBUG]: {message}");
-                    break;
-                case LOG.INFO:
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine($"[INFO]: {message}");
-                    break;
-                case LOG.WARNING:
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"[WARNING]: {message}");
-                    break;
-                case LOG.ERROR:
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"[ERROR]: {message}");
-                    break;
-            }
-            Console.ResetColor();
         }
 
         public static int GetRandomValue(int min, int max) {
@@ -351,14 +349,14 @@ namespace NQuad {
                 switch (extension) {
                     case "png":
                         texture.SaveAsPng(stream, texture.Width, texture.Height);
-                        Println(LOG.DEBUG, "The screenshot was saved");
+                        Println("The screenshot was saved", LOG.DEBUG);
                         break;
                     case "jpeg":
                         texture.SaveAsJpeg(stream, texture.Width, texture.Height);
-                        Println(LOG.DEBUG, "The screenshot was saved");
+                        Println("The screenshot was saved", LOG.DEBUG);
                         break;
                     default:
-                        Println(LOG.WARNING, "Only png and jpeg are saved");
+                        Println("Only png and jpeg are saved", LOG.WARNING);
                         break;
                 }
             }
@@ -373,14 +371,14 @@ namespace NQuad {
             switch (extension) {
                 case "png":
                     texture.SaveAsPng(dest, width, height);
-                    Println(LOG.DEBUG, "The screenshot was saved");
+                    Println("The screenshot was saved", LOG.DEBUG);
                     break;
                 case "jpg":
                     texture.SaveAsJpeg(dest, width, height);
-                    Println(LOG.DEBUG, "The screenshot was saved");
+                    Println("The screenshot was saved", LOG.DEBUG);
                     break;
                 default:
-                    Println(LOG.WARNING, "Only png and jpeg are saved");
+                    Println("Only png and jpeg are saved", LOG.WARNING);
                     break;
             }
             dest.Dispose();
@@ -390,9 +388,9 @@ namespace NQuad {
         }
 
         public static Vector2 MeasureText(string text, int fontSize) {
-            return Render.GetDefaultFont().MeasureString(text) * fontSize;
+            return Render.DefaultFont.MeasureString(text) * fontSize;
         }
-        public static Vector2 MeasureTextEx(SpriteFont font, string text, float fontSize) {
+        public static Vector2 MeasureText(SpriteFont font, string text, float fontSize) {
             return font.MeasureString(text) * fontSize;
         }
 
@@ -401,15 +399,6 @@ namespace NQuad {
             psi.UseShellExecute = true;
             psi.FileName = url;
             System.Diagnostics.Process.Start(psi);
-        }
-
-        public static Texture2D CreateTexture<T>(int width, int height, T[] Data) where T : unmanaged {
-            Texture2D tx = new Texture2D(Game.GraphicsDevice, width, height);
-            tx.SetData(Data);
-            return tx;
-        }
-        public static RenderTarget2D CreateRenderTarget2D(int width, int height, bool mipMaps = false, SurfaceFormat format = SurfaceFormat.Color, DepthFormat depthFormat = DepthFormat.None) {
-            return new RenderTarget2D(Game.GraphicsDevice, width, height, mipMaps, format, depthFormat);
         }
 
         /// <summary>

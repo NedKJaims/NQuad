@@ -10,7 +10,7 @@ namespace NQuad.Utils.Core
         FULLSCREEN_MODE = 2,
         WINDOW_RESIZABLE = 4,
         WINDOW_UNDECORATED = 8,
-        MSAA_4X_HINT = 16,
+        MSAA = 16,
         FIXED_TIME_STEP = 32,
         ALLOW_ALT_F4 = 64,
     }

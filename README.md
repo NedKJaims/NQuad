@@ -1,15 +1,14 @@
 # NQuad
 
-`NQuad` is a set of tools to facilitate video game development with` monogame`, which is highly inspired by `raylib`.
+`NQuad` is a set of tools to facilitate video game development with `monogame`, which is highly inspired by `raylib`.
 
-### Characteristics
-`NQuad` is a shared project, so there is no need to worry if the project is Net Core or Net Framework, the same code is for the available platforms.
-`NQuad` is made up of three modules that are independent of each other:
-* **Core:** this module is the main one, since it handles the window control, input, file handling, time, among other additional functions.
-* **Render:** this module is for the rendering of figures, textures and text, with an efficient 2D batching, which has functions with automatic geometry and manual geometry.
-* **Math:** this module consists of two sub-modules ...
-    * **Collision2D:** This sub-module contains basic shape collision detection functions.
-    * **Easings:** this sub-module contains stock animation functions.
+### Features
+`NQuad` is a .NetStandar library, so there is no need to worry if the project is .NetCore or .NetFramework, the same code is compatible for the available platforms.
+`NQuad` consists of four modules:
+* **Core:** This is the main module, as it handles window control, input, file management, time, among other additional functions.
+* **Render:** Module for rendering figures, textures and text, with efficient 2D batch processing, which has functions with automatic geometry and manual geometry.
+* **Collision:** Module with basic 2D shape collision detection functions.
+* **Easings:** Module with animation curves functions.
 
 ### Supported platforms
 The platforms on which `NQuad` has been tested are:
@@ -30,9 +29,9 @@ It is believed that it is compatible with all the projects that `monogame` offer
         This in order to activate some functions that are not in the other platforms.
         (*For the other platforms it is optional to define the platform*).
     2. Define the input that will be used:
-        1. **KEYBOARD_MOUSE** to use the keyboard and mouse.
-        2. **GAMEPADS** to use the gamepads
-        3. **TOUCH** to use the touch.
+        1. **KEYBOARD_MOUSE**.
+        2. **GAMEPADS**.
+        3. **TOUCH**.
 
 3. Initialize and update the **Core**:
 ```csharp
@@ -41,22 +40,19 @@ using Microsoft.Xna.Framework.Graphics;
 using NQuad;
 using NQuad.Utils.Core;
 
-namespace My_project
+namespace MyProject
 {
 
-    public class Game1 : Game
+    public class MainGame : Game
     {
-        private GraphicsDeviceManager graphics;
         private Texture2D texture;
-        public Game1() {
-            graphics = new GraphicsDeviceManager(this);
+        public MainGame() {
+            WindowConfigFlag state = WindowConfigFlag.FIXED_TIME_STEP | WindowConfigFlag.VSYNC | WindowConfigFlag.ALLOW_ALT_F4;
+
+            Core.InitCore(this, "Window", 800, 450, state);
         }
 
         protected override void Initialize() {
-
-            WindowConfigFlag state = WindowConfigFlag.FIXED_TIME_STEP | WindowConfigFlag.VSYNC | WindowConfigFlag.ALLOW_ALT_F4;
-
-            Core.InitCore(this, graphics, "Window", 512, 512, state);
 
             base.Initialize();
         }
@@ -67,15 +63,15 @@ namespace My_project
 
         protected override void Update(GameTime gameTime) {
             Core.Update(gameTime);
-
+            //Code here
         }
 
         protected override void Draw(GameTime gameTime) {
             Render.ClearBackground(Color.Black);
 
             Render.Begin();
-            Render.DrawRectangle(64, 64, 64, 64, Color.White);
-            Render.DrawTexture(sometexture, 100, 100, Color.Red);
+            Render.Rectangle(64, 64, 64, 64, Color.White);
+            Render.Texture(sometexture, 100, 100, Color.Red);
             Render.End();
             
         }
