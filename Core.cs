@@ -36,7 +36,7 @@ namespace NQuad {
 
         private static Random random { get; set; }
 
-        public static void InitCore(Game game, string title, int width, int height, WindowConfigFlag windowConfigFlag, string contentLocationFolder = "Content", int msaaCount = 2) {
+        public static void InitCore(Game game, string title, int width, int height, WindowConfigFlag flags, string contentLocationFolder = "Content", int msaaCount = 2) {
             Game = game;
             Graphics = new GraphicsDeviceManager(Game);
             Game.Content.RootDirectory = contentLocationFolder;
@@ -44,27 +44,29 @@ namespace NQuad {
             Graphics.DeviceCreated += (e, p) => {
                 Render.InitRender();
                 
-                if ((windowConfigFlag & WindowConfigFlag.VSYNC) > 0) Graphics.SynchronizeWithVerticalRetrace = true;
+                if ((flags & WindowConfigFlag.VSYNC) > 0) Graphics.SynchronizeWithVerticalRetrace = true;
                 else Graphics.SynchronizeWithVerticalRetrace = false;
 
-                if ((windowConfigFlag & WindowConfigFlag.FULLSCREEN_MODE) > 0) Graphics.IsFullScreen = true;
+                if ((flags & WindowConfigFlag.FULLSCREEN_MODE) > 0) Graphics.IsFullScreen = true;
 
-                if ((windowConfigFlag & WindowConfigFlag.WINDOW_RESIZABLE) > 0) Game.Window.AllowUserResizing = true;
+                if ((flags & WindowConfigFlag.WINDOW_RESIZABLE) > 0) Game.Window.AllowUserResizing = true;
                 else Game.Window.AllowUserResizing = false;
 
-                if ((windowConfigFlag & WindowConfigFlag.WINDOW_UNDECORATED) > 0) Game.Window.IsBorderless = true;
+                if ((flags & WindowConfigFlag.WINDOW_UNDECORATED) > 0) Game.Window.IsBorderless = true;
 
-                if ((windowConfigFlag & WindowConfigFlag.FIXED_TIME_STEP) > 0) Game.IsFixedTimeStep = true;
+                if ((flags & WindowConfigFlag.FIXED_TIME_STEP) > 0) Game.IsFixedTimeStep = true;
                 else Game.IsFixedTimeStep = false;
 
-                if ((windowConfigFlag & WindowConfigFlag.MSAA) > 0) {
+                if ((flags & WindowConfigFlag.MSAA) > 0) {
                     Graphics.PreferMultiSampling = true;
                     Graphics.GraphicsDevice.PresentationParameters.MultiSampleCount = msaaCount;
                 }
                 else Graphics.PreferMultiSampling = false;
 
-                if ((windowConfigFlag & WindowConfigFlag.ALLOW_ALT_F4) > 0) Game.Window.AllowAltF4 = true;
+                if ((flags & WindowConfigFlag.ALLOW_ALT_F4) > 0) Game.Window.AllowAltF4 = true;
                 else Game.Window.AllowAltF4 = false;
+
+                windowConfigFlag = flags;
 
                 Graphics.PreferredBackBufferWidth = width;
                 Graphics.PreferredBackBufferHeight = height;
