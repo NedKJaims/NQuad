@@ -210,7 +210,6 @@ namespace NQuad {
             if (index != 0) {
                 int mod = (currentPrimitive == PrimitiveType.TriangleList) ? 3 : 2;
                 Core.Game.GraphicsDevice.DrawUserPrimitives(currentPrimitive, data, 0, index / mod);
-                defaultShader.TransformMatrix = null;
                 index = 0;
             }
         }
