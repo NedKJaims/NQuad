@@ -1113,10 +1113,10 @@ namespace NQuad {
             Vector2 _texCoordBR;
             if (source.HasValue) {
                 Rectangle srcRect = source.GetValueOrDefault();
-                _texCoordTL.X = srcRect.X / texture.Width;
-                _texCoordTL.Y = srcRect.Y / texture.Height;
-                _texCoordBR.X = (srcRect.X + srcRect.Width) / texture.Width;
-                _texCoordBR.Y = (srcRect.Y + srcRect.Height) / texture.Height;
+                _texCoordTL.X = srcRect.X / (float)texture.Width;
+                _texCoordTL.Y = srcRect.Y / (float)texture.Height;
+                _texCoordBR.X = (srcRect.X + srcRect.Width) / (float)texture.Width;
+                _texCoordBR.Y = (srcRect.Y + srcRect.Height) / (float)texture.Height;
             } else {
                 _texCoordTL = Vector2.Zero;
                 _texCoordBR = Vector2.One;
@@ -1151,10 +1151,10 @@ namespace NQuad {
             Vector2 _texCoordBR;
             if (source.HasValue) {
                 Rectangle srcRect = source.GetValueOrDefault();
-                _texCoordTL.X = srcRect.X / texture.Width;
-                _texCoordTL.Y = srcRect.Y / texture.Height;
-                _texCoordBR.X = (srcRect.X + srcRect.Width) / texture.Width;
-                _texCoordBR.Y = (srcRect.Y + srcRect.Height) / texture.Height;
+                _texCoordTL.X = srcRect.X / (float)texture.Width;
+                _texCoordTL.Y = srcRect.Y / (float)texture.Height;
+                _texCoordBR.X = (srcRect.X + srcRect.Width) / (float)texture.Width;
+                _texCoordBR.Y = (srcRect.Y + srcRect.Height) / (float)texture.Height;
             } else {
                 _texCoordTL = Vector2.Zero;
                 _texCoordBR = Vector2.One;
