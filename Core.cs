@@ -206,14 +206,14 @@ namespace NQuad {
 #if DESKTOP && !NETFX_CORE && !WINDOWS_UAP
             Game.Window.Position = new Point(x, y);
 #else
-            Println(LOG.WARNING, "This function is not available on this platform, enter the preprocessor directive DESKTOP if you use Desktop, not UWP.");
+            Println("This function is not available on this platform, enter the preprocessor directive DESKTOP if you use Desktop, not UWP.", LOG.WARNING);
 #endif
         }
         public static void SetTextInputEvent(EventHandler<TextInputEventArgs> eventHandler) {
 #if DESKTOP && KEYBOARD_MOUSE
             Game.Window.TextInput += eventHandler;
 #else
-            Println(LOG.WARNING, "This function is not available on this platform, enter the preprocessor directive DESKTOP and KEYBOARD_MOUSE if you use Desktop, not UWP.");
+            Println("This function is not available on this platform, enter the preprocessor directive DESKTOP and KEYBOARD_MOUSE if you use Desktop, not UWP.", LOG.WARNING);
 #endif
         }
         public static void SetWindowSize(int width, int height) {
