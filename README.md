@@ -6,7 +6,7 @@
 `NQuad` is a .NetStandar library, so there is no need to worry if the project is .NetCore or .NetFramework, the same code is compatible for the available platforms.
 `NQuad` consists of four modules:
 * **Core:** This is the main module, as it handles window control, input, file management, time, among other additional functions.
-* **Render:** Module for rendering figures, textures and text, with efficient 2D batch processing, which has functions with automatic geometry and manual geometry.
+* **Render:** Module for rendering shapes, textures and text, with efficient 2D batch processing, which has functions with automatic geometry and manual geometry.
 * **Collision:** Module with basic 2D shape collision detection functions.
 * **Easings:** Module with animation curves functions.
 
