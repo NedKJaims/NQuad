@@ -40,10 +40,10 @@ namespace NQuad {
             Game = game;
             Graphics = new GraphicsDeviceManager(Game);
             Game.Content.RootDirectory = contentLocationFolder;
-            
+
             Graphics.DeviceCreated += (e, p) => {
                 Render.InitRender();
-                
+
                 if ((flags & WindowConfigFlag.VSYNC) > 0) Graphics.SynchronizeWithVerticalRetrace = true;
                 else Graphics.SynchronizeWithVerticalRetrace = false;
 
@@ -60,8 +60,7 @@ namespace NQuad {
                 if ((flags & WindowConfigFlag.MSAA) > 0) {
                     Graphics.PreferMultiSampling = true;
                     Graphics.GraphicsDevice.PresentationParameters.MultiSampleCount = msaaCount;
-                }
-                else Graphics.PreferMultiSampling = false;
+                } else Graphics.PreferMultiSampling = false;
 
                 if ((flags & WindowConfigFlag.ALLOW_ALT_F4) > 0) Game.Window.AllowAltF4 = true;
                 else Game.Window.AllowAltF4 = false;
@@ -279,6 +278,7 @@ namespace NQuad {
 
         #region Misc. functions
         public static void Print(object message, LOG type = LOG.NONE) {
+            
             switch (type) {
                 case LOG.NONE:
                     Console.ResetColor();
@@ -340,9 +340,25 @@ namespace NQuad {
             return (float)(r.NextDouble() * (maximum - minimum) + minimum);
         }
 
+        public static Vector2 MeasureText(string text, int fontSize) {
+            return Render.DefaultFont.MeasureString(text) * fontSize;
+        }
+        public static Vector2 MeasureText(SpriteFont font, string text, float fontSize) {
+            return font.MeasureString(text) * fontSize;
+        }
+
+        public static void OpenURL(string url) {
+            var psi = new System.Diagnostics.ProcessStartInfo();
+            psi.UseShellExecute = true;
+            psi.FileName = url;
+            System.Diagnostics.Process.Start(psi);
+        }
+
+        #endregion Misc. functions
+
+        #region  Files management functions
+
         public static void TakeScreenShot(string filename, string extension) {
-            int width = GetWindowWidth();
-            int height = GetWindowHeight();
             Color[] data = new Color[GetWindowWidth() * GetWindowHeight()];
             Graphics.GraphicsDevice.GetBackBufferData(data);
             Texture2D texture = new Texture2D(Graphics.GraphicsDevice, GetWindowWidth(), GetWindowHeight());
@@ -389,30 +405,6 @@ namespace NQuad {
             texture = null;
         }
 
-        public static Vector2 MeasureText(string text, int fontSize) {
-            return Render.DefaultFont.MeasureString(text) * fontSize;
-        }
-        public static Vector2 MeasureText(SpriteFont font, string text, float fontSize) {
-            return font.MeasureString(text) * fontSize;
-        }
-
-        public static void OpenURL(string url) {
-            var psi = new System.Diagnostics.ProcessStartInfo();
-            psi.UseShellExecute = true;
-            psi.FileName = url;
-            System.Diagnostics.Process.Start(psi);
-        }
-
-        /// <summary>
-        /// When assets are loaded it is advisable to clean the memory
-        /// </summary>
-        public static void GarbageClearMemory() {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-        }
-        #endregion Misc. functions
-
-        #region  Files management functions
         public static T ContentLoad<T>(string filename) {
             return Game.Content.Load<T>(filename);
         }
@@ -504,128 +496,54 @@ namespace NQuad {
             return new SpriteFont(texture, glyphs, cropping, characters, charHeight + lineSpacing, 0, kerning, '?');
         }
 
-        public static object LoadFileData(string fileName) {
-            byte[] bytes = File.ReadAllBytes(fileName);
-            MemoryStream memStream = new MemoryStream();
-            BinaryFormatter binForm = new BinaryFormatter();
-            memStream.Write(bytes, 0, bytes.Length);
-            memStream.Seek(0, SeekOrigin.Begin);
-            object output = binForm.Deserialize(memStream);
-            memStream.Dispose();
-            return output;
-        }
-        public static void SaveFileData(string fileName, object data) {
-            if (data != null) {
+        public static string LoadStorage(byte position, string path) {
+            if (File.Exists(path)) {
                 BinaryFormatter bf = new BinaryFormatter();
                 MemoryStream ms = new MemoryStream();
-                bf.Serialize(ms, data);
-                byte[] bytes = ms.ToArray();
-                File.WriteAllBytes(fileName, bytes);
+                string[] data;
+                byte[] dataFile = File.ReadAllBytes(path);
+                ms.Write(dataFile, 0, dataFile.Length);
+                ms.Seek(0, SeekOrigin.Begin);
+                data = (string[])bf.Deserialize(ms);
                 ms.Dispose();
-            }
-        }
-        public static string LoadFileText(string filename) {
-            return File.ReadAllText(filename);
-        }
-        public static void SaveFileText(string fileName, string text) {
-            if (File.Exists(fileName)) {
-                File.AppendAllText(fileName, text);
-            } else {
-                File.WriteAllText(fileName, text);
-            }
-
-        }
-        public static bool FileExists(string fileName) {
-            return File.Exists(fileName);
-        }
-        public static bool IsFileExtension(string fileName, string ext) {
-            if (File.Exists(fileName + ext))
-                return true;
-            return false;
-        }
-        public static bool DirectoryExists(string dirPath) {
-            return Directory.Exists(dirPath);
-        }
-        public static string GetFileExtension(string fileName) {
-            return Path.GetExtension(fileName);
-        }
-        public static string GetFileName(string filePath) {
-            return Path.GetFileName(filePath);
-        }
-        public static string GetFileNameWithoutExt(string filePath) {
-            return Path.GetFileNameWithoutExtension(filePath);
-        }
-        public static string GetDirectoryPath(string filePath) {
-            return Path.GetDirectoryName(filePath);
-        }
-        public static string GetPrevDirectoryPath(string dirPath) {
-            return Directory.GetParent(dirPath).FullName;
-        }
-        public static string GetWorkingDirectory() {
-            return Directory.GetCurrentDirectory();
-        }
-        public static string[] GetDirectoryFiles(string dirPath) {
-            return Directory.GetFiles(dirPath);
-        }
-        public static void ChangeDirectory(string dir) {
-            Directory.SetCurrentDirectory(dir);
-        }
-        public static DateTime GetFileModTime(string fileName) {
-            return File.GetLastWriteTime(fileName);
-        }
-        public static byte[] CompressData(string data) {
-            return Encoding.UTF8.GetBytes(data);
-        }
-        public static string DecompressData(byte[] data) {
-            return Encoding.UTF8.GetString(data);
-        }
-
-        public static object LoadStorageValue(int position) {
-
-            if (FileExists(GetWorkingDirectory() + "/storage.data")) {
-                byte[] bytes = File.ReadAllBytes(GetWorkingDirectory() + "/storage.data");
-                MemoryStream memStream = new MemoryStream();
-                BinaryFormatter binForm = new BinaryFormatter();
-                memStream.Write(bytes, 0, bytes.Length);
-                memStream.Seek(0, SeekOrigin.Begin);
-                Dictionary<int, object> data = (Dictionary<int, object>)binForm.Deserialize(memStream);
-                memStream.Dispose();
                 return data[position];
             }
             return null;
         }
-        public static Dictionary<int, object> LoadAllStorageValues() {
-            byte[] bytes = File.ReadAllBytes(GetWorkingDirectory() + "/storage.data");
-            MemoryStream memStream = new MemoryStream();
-            BinaryFormatter binForm = new BinaryFormatter();
-            memStream.Write(bytes, 0, bytes.Length);
-            memStream.Seek(0, SeekOrigin.Begin);
-            Dictionary<int, object> data = (Dictionary<int, object>)binForm.Deserialize(memStream);
-            memStream.Dispose();
-            return data;
-        }
-        public static void SaveStorageValue(int position, object value) {
-            if (value != null) {
-                Dictionary<int, object> data;
-                if (FileExists(GetWorkingDirectory() + "/storage.data")) {
-                    data = LoadAllStorageValues();
-                } else {
-                    data = new Dictionary<int, object>();
-                }
-                if (data.ContainsKey(position)) {
-                    data[position] = value;
-                } else {
-                    data.Add(position, value);
-                }
+        public static string[] LoadStorage(string path) {
+            if (File.Exists(path)) {
                 BinaryFormatter bf = new BinaryFormatter();
                 MemoryStream ms = new MemoryStream();
-                bf.Serialize(ms, data);
-                byte[] bytes = ms.ToArray();
-
-                File.WriteAllBytes(GetWorkingDirectory() + "/storage.data", bytes);
+                string[] data;
+                byte[] dataFile = File.ReadAllBytes(path);
+                ms.Write(dataFile, 0, dataFile.Length);
+                ms.Seek(0, SeekOrigin.Begin);
+                data = (string[])bf.Deserialize(ms);
                 ms.Dispose();
+                return data;
             }
+            return null;
         }
+        public static void SaveStorage(string path, byte position, string value) {
+            BinaryFormatter bf = new BinaryFormatter();
+            MemoryStream ms = new MemoryStream();
+            string[] data;
+            if (File.Exists(path)) {
+                byte[] dataFile = File.ReadAllBytes(path);
+                ms.Write(dataFile, 0, dataFile.Length);
+                ms.Seek(0, SeekOrigin.Begin);
+                data = (string[])bf.Deserialize(ms);
+            } else {
+                data = new string[256];
+            }
+            data[position] = value;
+            ms.Seek(0, SeekOrigin.Begin);
+            bf.Serialize(ms, data);
+            byte[] bytes = ms.ToArray();
+            File.WriteAllBytes(path, bytes);
+            ms.Dispose();
+        }
+
         #endregion  Files management functions
 
 #if KEYBOARD_MOUSE
@@ -797,7 +715,7 @@ namespace NQuad {
 #endif
 #if TOUCH
         #region Input-related functions: Touch
-        public static void SetTouchGestures( GestureType gestures) {
+        public static void SetTouchGestures(GestureType gestures) {
             TouchPanel.EnabledGestures = gestures;
         }
         public static GestureType GetTouchGestures() {
@@ -815,7 +733,7 @@ namespace NQuad {
         public static int GetTouchPointsCount() {
             return TouchState.Count;
         }
-        public static Vector2? GetTouchPosition( int finger) {
+        public static Vector2? GetTouchPosition(int finger) {
             if (TouchState.Count > finger)
                 return TouchState[finger].Position;
             return null;
