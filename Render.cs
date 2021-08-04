@@ -342,7 +342,6 @@ namespace NQuad {
                 data[index++].Set(centerX + (float)Math.Sin(DEG2RAD * (angle + stepLength)) * radius, centerY + (float)Math.Cos(DEG2RAD * (angle + stepLength)) * radius, 0, 0, color);
                 angle += stepLength;
             }
-            Console.WriteLine(index);
         }
         public static void Circle(Vector2 center, float radius, Color color) {
             CheckBufferLimitMode(108, PrimitiveType.TriangleList, defaultTexture);
@@ -659,7 +658,26 @@ namespace NQuad {
             Rectangle(recX, (recY + recHeight - lineThick), recWidth, lineThick, color);
             Rectangle(recX, (recY + lineThick), lineThick, (recHeight - lineThick * 2), color);
         }
-        
+        public static void RectangleLines(float recX, float recY, float recWidth, float recHeight, Vector2 origin, float angle, float lineThick, Color color) {
+            if (lineThick > recWidth || lineThick > recHeight) {
+                if (recWidth > recHeight) lineThick = recHeight / 2;
+                else if (recWidth < recHeight) lineThick = recWidth / 2;
+            }
+            origin = -origin;
+            float cos = (float)Math.Cos(angle * DEG2RAD);
+            float sin = (float)Math.Sin(angle * DEG2RAD);
+            Vector2 TL = new Vector2(recX + origin.X * cos - origin.Y * sin, recY + origin.X * sin + origin.Y * cos);
+            Vector2 TR = new Vector2(recX + (origin.X + recWidth) * cos - origin.Y * sin, recY + (origin.X + recWidth) * sin + origin.Y * cos);
+            Vector2 BL = new Vector2(recX + origin.X * cos - (origin.Y + recHeight) * sin, recY + origin.X * sin + (origin.Y + recHeight) * cos);
+            Vector2 BR = new Vector2(recX + (origin.X + recWidth) * cos - (origin.Y + recHeight) * sin, recY + (origin.X + recWidth) * sin + (origin.Y + recHeight) * cos);
+
+            Line(TL, TR, lineThick, color);
+            Line(TL, BL, lineThick, color);
+            Line(TR, BR, lineThick, color);
+            Line(BL, BR, lineThick, color);
+
+        }
+
         public static void RectangleRounded(float recX, float recY, float recWidth, float recHeight, float roundness, int segments, Color color) {
             if ((roundness <= 0.0f) || (recWidth < 1) || (recHeight < 1)) {
                 Rectangle(recX, recY, recWidth, recHeight, color);
