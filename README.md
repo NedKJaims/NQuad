@@ -1,6 +1,7 @@
 # NQuad
-
 `NQuad` is a set of tools to facilitate video game development with `monogame`, which is highly inspired by `raylib`.
+
+![](https://i.imgur.com/N05qhj2.gif)
 
 ### Features
 `NQuad` is a .NetStandar library, so there is no need to worry if the project is .NetCore or .NetFramework, the same code is compatible for the available platforms.
