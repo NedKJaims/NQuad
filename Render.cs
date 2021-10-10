@@ -314,18 +314,16 @@ namespace NQuad {
 
             float right = startX + width;
             float bottom = startY + height;
-            float stepX = startX + cellSize;
-            float stepY = startX + cellSize;
             CheckBufferLimitMode(2 * (numCellX + numCellY), PrimitiveType.LineList, defaultTexture);
 
             for (ushort i = 0; i < numCellX; i++) {
-                float times = stepX * i;
+                float times = (cellSize * i) + startX;
                 data[index++].Set(times, startY, 0, 0, color);
                 data[index++].Set(times, bottom, 0, 0, color);
             }
 
             for (ushort i = 0; i < numCellY; i++) {
-                float times = stepY * i;
+                float times = (cellSize * i) + startY;
                 data[index++].Set(startX, times, 0, 0, color);
                 data[index++].Set(right, times, 0, 0, color);
             }
