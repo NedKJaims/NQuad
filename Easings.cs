@@ -3,6 +3,7 @@
 namespace NQuad {
 
     /*  https://easings.co/
+    *   https://easings.net/
     *   How to use:
     *   The four inputs t,b,c,d are defined as follows:
     *   t = current time ( any unit measure, but same unit as duration)
@@ -25,20 +26,8 @@ namespace NQuad {
     *   }
     */
     public static class Easings {
-
-        public static float LinearNone(float t, float b, float c, float d) {
-            return (c * t / d + b);
-        }
-
-        public static float LinearIn(float t, float b, float c, float d) {
-            return (c * t / d + b);
-        }
-
-        public static float LinearOut(float t, float b, float c, float d) {
-            return (c * t / d + b);
-        }
-
-        public static float LinearInOut(float t, float b, float c, float d) {
+        // Linear Easing function
+        public static float Linear(float t, float b, float c, float d) {
             return (c * t / d + b);
         }
 
@@ -103,6 +92,36 @@ namespace NQuad {
             return (-c / 2 * (((t - 2) * (--t)) - 1) + b);
         }
 
+        // Quart Easing functions
+        public static float QuartIn(float t, float b, float c, float d) {
+            return c * (t /= d) * t * t * t + b;
+        }
+
+        public static float QuartOut(float t, float b, float c, float d) {
+            return -c * ((t = t / d - 1) * t * t * t - 1) + b;
+        }
+
+        public static float QuartInOut(float t, float b, float c, float d) {
+            if ((t /= d / 2) < 1) return c / 2 * t * t * t * t + b;
+            return -c / 2 * ((t -= 2) * t * t * t - 2) + b;
+
+        }
+
+        // Quint Easing functions
+        public static float QuintIn(float t, float b, float c, float d) {
+            return c * (t /= d) * t * t * t * t + b;
+        }
+
+        public static float QuintOut(float t, float b, float c, float d) {
+            return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
+        }
+
+        public static float QuintInOut(float t, float b, float c, float d) {
+            if ((t /= d / 2) < 1) return c / 2 * t * t * t * t * t + b;
+            return c / 2 * ((t -= 2) * t * t * t * t + 2) + b;
+
+        }
+        
         // Exponential Easing functions
         public static float ExpoIn(float t, float b, float c, float d) {
             return (t == 0) ? b : (c * (float)Math.Pow(2, 10 * (t / d - 1)) + b);
