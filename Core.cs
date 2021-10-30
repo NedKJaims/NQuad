@@ -16,24 +16,11 @@ using System.Text;
 namespace NQuad {
     public static class Core {
 
-        private static WindowConfigFlag windowConfigFlag { get; set; }
-        internal static Game Game { get; set; }
-        private static GraphicsDeviceManager Graphics { get; set; }
-#if KEYBOARD_MOUSE
-        private static KeyboardState KeyboardCurrentState { get; set; }
-        private static KeyboardState KeyboardPreviousState { get; set; }
-        private static MouseState MouseCurrentState { get; set; }
-        private static MouseState MousePreviousState { get; set; }
-#endif
-#if GAMEPADS
-        private static GamePadState[] GamePadCurrentStates { get; set; }
-        private static GamePadState[] GamePadPreviouStates { get; set; }
-#endif
-#if TOUCH
-        private static TouchCollection TouchState { get; set; }
-#endif
-        private static GameTime timeGame { get; set; }
+        public static Game Game { get; private set; }
+        public static GraphicsDeviceManager Graphics { get; private set; }
+        public static GameTime GameTime { get; private set; }
 
+        private static WindowConfigFlag windowConfigFlag { get; set; }
         private static Random random { get; set; }
 
         public static void InitCore(Game game, string title, int width, int height, WindowConfigFlag flags, string contentLocationFolder = "Content", int msaaCount = 2) {
@@ -74,45 +61,15 @@ namespace NQuad {
 
             Game.Window.Title = title;
             Game.IsMouseVisible = true;
-#if KEYBOARD_MOUSE
-            KeyboardCurrentState = Keyboard.GetState();
-            MouseCurrentState = Mouse.GetState();
-#endif
-#if GAMEPADS
-            GamePadCurrentStates = new GamePadState[1];
-            for (int i = 0; i < GamePadCurrentStates.Length; i++) {
-                GamePadCurrentStates[i] = GamePad.GetState(i);
-            }
-            GamePadPreviouStates = new GamePadState[1];
-#endif
+
             random = new Random();
         }
         public static void Update(GameTime gameTime) {
-            timeGame = gameTime;
-#if KEYBOARD_MOUSE
-            KeyboardPreviousState = KeyboardCurrentState;
-            KeyboardCurrentState = Keyboard.GetState();
-            MousePreviousState = MouseCurrentState;
-            MouseCurrentState = Mouse.GetState();
-#endif
-#if GAMEPADS
-            for (int i = 0; i < GamePadCurrentStates.Length; i++) {
-                GamePadPreviouStates[i] = GamePadCurrentStates[i];
-                GamePadCurrentStates[i] = GamePad.GetState(i);
-            }
-#endif
-#if TOUCH
-            TouchState = TouchPanel.GetState();
-#endif
+            GameTime = gameTime;
+            Input.Update();
         }
 
         #region Window-related functions
-        public static void CloseWindow() {
-            Game.Exit();
-        }
-        public static bool IsWindowFocused() {
-            return Game.IsActive;
-        }
         public static bool IsWindowState(WindowConfigFlag flag) {
             return (windowConfigFlag & flag) > 0;
         }
@@ -201,30 +158,10 @@ namespace NQuad {
         public static void SetWindowTitle(string title) {
             Game.Window.Title = title;
         }
-        public static void SetWindowPosition(int x, int y) {
-#if DESKTOP && !NETFX_CORE && !WINDOWS_UAP
-            Game.Window.Position = new Point(x, y);
-#else
-            Println("This function is not available on this platform, enter the preprocessor directive DESKTOP if you use Desktop, not UWP.", LOG.WARNING);
-#endif
-        }
-        public static void SetTextInputEvent(EventHandler<TextInputEventArgs> eventHandler) {
-#if DESKTOP && KEYBOARD_MOUSE
-            Game.Window.TextInput += eventHandler;
-#else
-            Println("This function is not available on this platform, enter the preprocessor directive DESKTOP and KEYBOARD_MOUSE if you use Desktop, not UWP.", LOG.WARNING);
-#endif
-        }
         public static void SetWindowSize(int width, int height) {
             Graphics.PreferredBackBufferWidth = width;
             Graphics.PreferredBackBufferHeight = height;
             Graphics.ApplyChanges();
-        }
-        public static void IsWindowResize(EventHandler<EventArgs> eventWindowResize) {
-            Game.Window.ClientSizeChanged += eventWindowResize;
-        }
-        public static void IsWindowChangeOrientation(EventHandler<EventArgs> eventWindowChangeOrientation) {
-            Game.Window.OrientationChanged += eventWindowChangeOrientation;
         }
         public static DisplayOrientation GetCurrentWindowOrientation() {
             return Game.Window.CurrentOrientation;
@@ -235,44 +172,48 @@ namespace NQuad {
         public static int GetWindowHeight() {
             return Game.Window.ClientBounds.Height;
         }
-        public static int GetMonitorCount() {
-            return GraphicsAdapter.Adapters.Count;
-        }
-        public static int GetMonitorWidth(int monitor) {
-            return GraphicsAdapter.Adapters[monitor].CurrentDisplayMode.Width;
-        }
-        public static int GetMonitorHeight(int monitor) {
-            return GraphicsAdapter.Adapters[monitor].CurrentDisplayMode.Height;
-        }
-        public static string GetMonitorCurrentGameName() {
-            return Game.Window.ScreenDeviceName;
-        }
-        public static string GetMonitorDescription(int monitor) {
-            return GraphicsAdapter.Adapters[monitor].Description;
-        }
-        public static bool IsMonitorWideScreen(int monitor) {
-            return GraphicsAdapter.Adapters[monitor].IsWideScreen;
+        public static void SetWindowPosition(int x, int y) {
+#if DESKTOP && !NETFX_CORE && !WINDOWS_UAP
+            Game.Window.Position = new Point(x, y);
+#else
+            Println("This function is not available on this platform, enter the preprocessor directive DESKTOP if you use Desktop, not UWP.", LOG.WARNING);
+#endif
         }
         public static Point GetWindowPosition() {
             return Game.Window.ClientBounds.Location;
         }
-        public static IntPtr GetWindowHandle() {
-            return Game.Window.Handle;
-        }
+
         #endregion Window-related functions
 
+        #region Monitor-related functions
+
+        public static int GetMonitorCount() {
+            return GraphicsAdapter.Adapters.Count;
+        }
+        public static GraphicsAdapter GetCurrentMonitor() {
+            return GraphicsAdapter.DefaultAdapter;
+        }
+        public static GraphicsAdapter GetMonitor(int monitor) {
+            return GraphicsAdapter.Adapters[monitor];
+        }
+
+        #endregion Monitor-related functions
+
         #region Timing-related functions
+        public static TimeSpan GetTargetFPS() {
+            return Game.TargetElapsedTime;
+        }
         public static void SetTargetFPS(double FPS) {
             Game.TargetElapsedTime = TimeSpan.FromSeconds(1d / FPS);
         }
         public static double GetFPS() {
-            return 1d / timeGame.ElapsedGameTime.TotalSeconds;
+            return 1d / GameTime.ElapsedGameTime.TotalSeconds;
         }
         public static double GetFrameTime() {
-            return timeGame.ElapsedGameTime.TotalSeconds;
+            return GameTime.ElapsedGameTime.TotalSeconds;
         }
         public static TimeSpan GetTimePlaying() {
-            return timeGame.TotalGameTime;
+            return GameTime.TotalGameTime;
         }
         #endregion Timing-related functions
 
@@ -359,57 +300,50 @@ namespace NQuad {
         #region  Files management functions
 
         public static void TakeScreenShot(string filename, string extension) {
-            Color[] data = new Color[GetWindowWidth() * GetWindowHeight()];
-            Graphics.GraphicsDevice.GetBackBufferData(data);
-            Texture2D texture = new Texture2D(Graphics.GraphicsDevice, GetWindowWidth(), GetWindowHeight());
-            texture.SetData(data);
-            using (Stream stream = new FileStream($"{filename}.{extension}", FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite)) {
-                switch (extension) {
-                    case "png":
-                        texture.SaveAsPng(stream, texture.Width, texture.Height);
-                        Println("The screenshot was saved", LOG.DEBUG);
-                        break;
-                    case "jpeg":
-                        texture.SaveAsJpeg(stream, texture.Width, texture.Height);
-                        Println("The screenshot was saved", LOG.DEBUG);
-                        break;
-                    default:
-                        Println("Only png and jpeg are saved", LOG.WARNING);
-                        break;
+            using(Texture2D texture = new Texture2D(Graphics.GraphicsDevice, GetWindowWidth(), GetWindowHeight())) {
+                Color[] data = new Color[GetWindowWidth() * GetWindowHeight()];
+                Graphics.GraphicsDevice.GetBackBufferData(data);
+                texture.SetData(data);
+                using (Stream stream = new FileStream($"{filename}.{extension}", FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite)) {
+                    switch (extension) {
+                        case "png":
+                            texture.SaveAsPng(stream, texture.Width, texture.Height);
+                            Println("The screenshot was saved", LOG.DEBUG);
+                            break;
+                        case "jpeg":
+                            texture.SaveAsJpeg(stream, texture.Width, texture.Height);
+                            Println("The screenshot was saved", LOG.DEBUG);
+                            break;
+                        default:
+                            Println("Only png and jpeg are saved", LOG.WARNING);
+                            break;
+                    }
                 }
             }
-            texture.Dispose();
-            texture = null;
-            data = null;
         }
         public static void SaveTexture2D(Color[] data, int width, int height, string filename, string extension) {
-            Texture2D texture = new Texture2D(Graphics.GraphicsDevice, width, height);
-            texture.SetData(data);
-            Stream dest = new FileStream($"{filename}.{extension}", FileMode.Create, FileAccess.Write, FileShare.None);
-            switch (extension) {
-                case "png":
-                    texture.SaveAsPng(dest, width, height);
-                    Println("The screenshot was saved", LOG.DEBUG);
-                    break;
-                case "jpg":
-                    texture.SaveAsJpeg(dest, width, height);
-                    Println("The screenshot was saved", LOG.DEBUG);
-                    break;
-                default:
-                    Println("Only png and jpeg are saved", LOG.WARNING);
-                    break;
-            }
-            dest.Dispose();
-            dest = null;
-            texture.Dispose();
-            texture = null;
+            using (Texture2D texture = new Texture2D(Graphics.GraphicsDevice, width, height)) {
+                texture.SetData(data);
+                using (Stream dest = new FileStream($"{filename}.{extension}", FileMode.Create, FileAccess.Write, FileShare.None)) {
+                    switch (extension) {
+                        case "png":
+                            texture.SaveAsPng(dest, width, height);
+                            Println("The screenshot was saved", LOG.DEBUG);
+                            break;
+                        case "jpg":
+                            texture.SaveAsJpeg(dest, width, height);
+                            Println("The screenshot was saved", LOG.DEBUG);
+                            break;
+                        default:
+                            Println("Only png and jpeg are saved", LOG.WARNING);
+                            break;
+                    }
+                }
+            }                
         }
 
-        public static T ContentLoad<T>(string filename) {
-            return Game.Content.Load<T>(filename);
-        }
         public static SpriteFont LoadFontFromImage(string filename) {
-            Texture2D texture = ContentLoad<Texture2D>(filename);
+            Texture2D texture = Game.Content.Load<Texture2D>(filename);
             Color[] pixels = new Color[texture.Width * texture.Height];
             texture.GetData(pixels);
 
@@ -498,253 +432,54 @@ namespace NQuad {
 
         public static string LoadStorage(byte position, string path) {
             if (File.Exists(path)) {
-                BinaryFormatter bf = new BinaryFormatter();
-                MemoryStream ms = new MemoryStream();
-                string[] data;
-                byte[] dataFile = File.ReadAllBytes(path);
-                ms.Write(dataFile, 0, dataFile.Length);
-                ms.Seek(0, SeekOrigin.Begin);
-                data = (string[])bf.Deserialize(ms);
-                ms.Dispose();
-                return data[position];
+                using (MemoryStream ms = new MemoryStream()) {
+                    BinaryFormatter bf = new BinaryFormatter();
+                    string[] data;
+                    byte[] dataFile = File.ReadAllBytes(path);
+                    ms.Write(dataFile, 0, dataFile.Length);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    data = (string[])bf.Deserialize(ms);
+                    return data[position];
+                }
             }
             return null;
         }
         public static string[] LoadStorage(string path) {
             if (File.Exists(path)) {
-                BinaryFormatter bf = new BinaryFormatter();
-                MemoryStream ms = new MemoryStream();
-                string[] data;
-                byte[] dataFile = File.ReadAllBytes(path);
-                ms.Write(dataFile, 0, dataFile.Length);
-                ms.Seek(0, SeekOrigin.Begin);
-                data = (string[])bf.Deserialize(ms);
-                ms.Dispose();
-                return data;
+                using (MemoryStream ms = new MemoryStream()) {
+                    BinaryFormatter bf = new BinaryFormatter();
+                    string[] data;
+                    byte[] dataFile = File.ReadAllBytes(path);
+                    ms.Write(dataFile, 0, dataFile.Length);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    data = (string[])bf.Deserialize(ms);
+                    ms.Dispose();
+                    return data;
+                }
             }
             return null;
         }
         public static void SaveStorage(string path, byte position, string value) {
-            BinaryFormatter bf = new BinaryFormatter();
-            MemoryStream ms = new MemoryStream();
-            string[] data;
-            if (File.Exists(path)) {
-                byte[] dataFile = File.ReadAllBytes(path);
-                ms.Write(dataFile, 0, dataFile.Length);
+            using (MemoryStream ms = new MemoryStream()) {
+                BinaryFormatter bf = new BinaryFormatter();
+                string[] data;
+                if (File.Exists(path)) {
+                    byte[] dataFile = File.ReadAllBytes(path);
+                    ms.Write(dataFile, 0, dataFile.Length);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    data = (string[])bf.Deserialize(ms);
+                } else {
+                    data = new string[256];
+                }
+                data[position] = value;
                 ms.Seek(0, SeekOrigin.Begin);
-                data = (string[])bf.Deserialize(ms);
-            } else {
-                data = new string[256];
+                bf.Serialize(ms, data);
+                byte[] bytes = ms.ToArray();
+                File.WriteAllBytes(path, bytes);
             }
-            data[position] = value;
-            ms.Seek(0, SeekOrigin.Begin);
-            bf.Serialize(ms, data);
-            byte[] bytes = ms.ToArray();
-            File.WriteAllBytes(path, bytes);
-            ms.Dispose();
         }
 
         #endregion  Files management functions
 
-#if KEYBOARD_MOUSE
-        #region Input-related functions: keyboard
-        public static bool IsKeyPressed(Keys key) {
-            return KeyboardCurrentState.IsKeyDown(key) && !KeyboardPreviousState.IsKeyDown(key);
-        }
-        public static bool IsKeyDown(Keys key) {
-            return KeyboardCurrentState.IsKeyDown(key);
-        }
-        public static bool IsKeyReleased(Keys key) {
-            return KeyboardCurrentState.IsKeyUp(key) && KeyboardPreviousState.IsKeyDown(key);
-        }
-        public static bool IsKeyUp(Keys key) {
-            return KeyboardCurrentState.IsKeyUp(key);
-        }
-        #endregion Input-related functions: keyboard
-
-        #region Input-related functions: mouse 
-        public static void ShowCursor() {
-            Game.IsMouseVisible = true;
-        }
-        public static void HideCursor() {
-            Game.IsMouseVisible = false;
-        }
-        public static bool IsCursorHidden() {
-            return Game.IsMouseVisible;
-        }
-        public static void SetMouseIcon(MouseCursor mouseCursor) {
-            Mouse.SetCursor(mouseCursor);
-        }
-        public static bool IsMouseButtonPressed(MouseButton button) {
-            switch (button) {
-                case MouseButton.Left:
-                    return MouseCurrentState.LeftButton == ButtonState.Pressed && MousePreviousState.LeftButton != ButtonState.Pressed;
-                case MouseButton.Right:
-                    return MouseCurrentState.RightButton == ButtonState.Pressed && MousePreviousState.RightButton != ButtonState.Pressed;
-                case MouseButton.Middle:
-                    return MouseCurrentState.MiddleButton == ButtonState.Pressed && MousePreviousState.MiddleButton != ButtonState.Pressed;
-                case MouseButton.XButton1:
-                    return MouseCurrentState.XButton1 == ButtonState.Pressed && MousePreviousState.XButton1 != ButtonState.Pressed;
-                case MouseButton.XButton2:
-                    return MouseCurrentState.XButton2 == ButtonState.Pressed && MousePreviousState.XButton2 != ButtonState.Pressed;
-                default:
-                    return false;
-            }
-        }
-        public static bool IsMouseButtonDown(MouseButton button) {
-            switch (button) {
-                case MouseButton.Left:
-                    return MouseCurrentState.LeftButton == ButtonState.Pressed;
-                case MouseButton.Right:
-                    return MouseCurrentState.RightButton == ButtonState.Pressed;
-                case MouseButton.Middle:
-                    return MouseCurrentState.MiddleButton == ButtonState.Pressed;
-                case MouseButton.XButton1:
-                    return MouseCurrentState.XButton1 == ButtonState.Pressed;
-                case MouseButton.XButton2:
-                    return MouseCurrentState.XButton2 == ButtonState.Pressed;
-                default:
-                    return false;
-            }
-        }
-        public static bool IsMouseButtonReleased(MouseButton button) {
-            switch (button) {
-                case MouseButton.Left:
-                    return MouseCurrentState.LeftButton == ButtonState.Released && MousePreviousState.LeftButton == ButtonState.Pressed;
-                case MouseButton.Right:
-                    return MouseCurrentState.RightButton == ButtonState.Released && MousePreviousState.RightButton == ButtonState.Pressed;
-                case MouseButton.Middle:
-                    return MouseCurrentState.MiddleButton == ButtonState.Released && MousePreviousState.MiddleButton == ButtonState.Pressed;
-                case MouseButton.XButton1:
-                    return MouseCurrentState.XButton1 == ButtonState.Released && MousePreviousState.XButton1 == ButtonState.Pressed;
-                case MouseButton.XButton2:
-                    return MouseCurrentState.XButton2 == ButtonState.Released && MousePreviousState.XButton2 == ButtonState.Pressed;
-                default:
-                    return false;
-            }
-        }
-        public static bool IsMouseButtonUp(MouseButton button) {
-            switch (button) {
-                case MouseButton.Left:
-                    return MouseCurrentState.LeftButton == ButtonState.Released;
-                case MouseButton.Right:
-                    return MouseCurrentState.RightButton == ButtonState.Released;
-                case MouseButton.Middle:
-                    return MouseCurrentState.MiddleButton == ButtonState.Released;
-                case MouseButton.XButton1:
-                    return MouseCurrentState.XButton1 == ButtonState.Released;
-                case MouseButton.XButton2:
-                    return MouseCurrentState.XButton2 == ButtonState.Released;
-                default:
-                    return false;
-            }
-        }
-        public static int GetMouseX() {
-            return MouseCurrentState.X;
-        }
-        public static int GetMouseY() {
-            return MouseCurrentState.Y;
-        }
-        public static Vector2 GetMousePosition() {
-            return MouseCurrentState.Position.ToVector2();
-        }
-        public static void SetMousePosition(int x, int y) {
-            Mouse.SetPosition(x, y);
-        }
-        public static int GetMouseHorizontalWheelMove() {
-            return MouseCurrentState.HorizontalScrollWheelValue - MousePreviousState.HorizontalScrollWheelValue;
-        }
-        public static int GetMouseHorizontalWheelPosition() {
-            return MouseCurrentState.HorizontalScrollWheelValue;
-        }
-        public static int GetMouseVerticalWheelMove() {
-            return MouseCurrentState.ScrollWheelValue - MousePreviousState.ScrollWheelValue;
-        }
-        public static int GetMouseVerticalWheelPosition() {
-            return MouseCurrentState.ScrollWheelValue;
-        }
-        #endregion Input-related functions: mouse 
-#endif
-#if GAMEPADS
-        #region Input-related functions: gamepads
-        public static void SetGamePadsNumber( byte number) {
-            GamePadCurrentStates = new GamePadState[number];
-            for (int i = 0; i < GamePadCurrentStates.Length; i++) {
-                GamePadCurrentStates[i] = GamePad.GetState(i);
-            }
-            GamePadPreviouStates = new GamePadState[number];
-        }
-        public static bool IsGamepadAvailable( int gamepad) {
-            return GamePad.GetState(gamepad).IsConnected;
-        }
-        public static bool IsGamepadButtonPressed( int gamepad,  Buttons button) {
-            return GamePadCurrentStates[gamepad].IsButtonDown(button) && !GamePadPreviouStates[gamepad].IsButtonDown(button);
-        }
-        public static bool IsGamepadButtonDown( int gamepad,  Buttons button) {
-            return GamePadCurrentStates[gamepad].IsButtonDown(button);
-        }
-        public static bool IsGamepadButtonReleased( int gamepad,  Buttons button) {
-            return GamePadCurrentStates[gamepad].IsButtonUp(button) && GamePadPreviouStates[gamepad].IsButtonDown(button);
-        }
-        public static bool IsGamepadButtonUp( int gamepad,  Buttons button) {
-            return GamePadCurrentStates[gamepad].IsButtonUp(button);
-        }
-        public static Vector2? GetGamepadThumbStick( int gamepad,  ThumbSticks thumbStick) {
-            switch (thumbStick) {
-                case ThumbSticks.Left:
-                    return GamePadCurrentStates[gamepad].ThumbSticks.Left;
-                case ThumbSticks.Right:
-                    return GamePadCurrentStates[gamepad].ThumbSticks.Right;
-                default:
-                    return null;
-            }
-
-        }
-        public static float? GetGamepadTrigger( int gamepad,  Triggers trigger) {
-            switch (trigger) {
-                case Triggers.Left:
-                    return GamePadCurrentStates[gamepad].Triggers.Left;
-                case Triggers.Right:
-                    return GamePadCurrentStates[gamepad].Triggers.Right;
-                default:
-                    return null;
-            }
-
-        }
-        #endregion Input-related functions: gamepads
-#endif
-#if TOUCH
-        #region Input-related functions: Touch
-        public static void SetTouchGestures(GestureType gestures) {
-            TouchPanel.EnabledGestures = gestures;
-        }
-        public static GestureType GetTouchGestures() {
-            return TouchPanel.EnabledGestures;
-        }
-        public static void EnableMouseTouchSimulate() {
-            TouchPanel.EnabledGestures = GestureType.FreeDrag;
-            TouchPanel.EnableMouseTouchPoint = true;
-            TouchPanel.EnableMouseGestures = true;
-        }
-        public static void DisableMouseTouchSimulate() {
-            TouchPanel.EnableMouseTouchPoint = false;
-            TouchPanel.EnableMouseGestures = false;
-        }
-        public static int GetTouchPointsCount() {
-            return TouchState.Count;
-        }
-        public static Vector2? GetTouchPosition(int finger) {
-            if (TouchState.Count > finger)
-                return TouchState[finger].Position;
-            return null;
-        }
-        public static void ReadGestures(ref GestureSample? gesture) {
-            gesture = null;
-            while (TouchPanel.IsGestureAvailable) {
-                gesture = TouchPanel.ReadGesture();
-            }
-        }
-        #endregion Input-related functions: Touch
-#endif
     }
 }
