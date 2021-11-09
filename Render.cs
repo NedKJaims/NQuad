@@ -1293,7 +1293,7 @@ namespace NQuad {
 
         public static void FPS(float posX, float posY, float fontSize) {
             Color color = Color.Lime; // good fps
-            int fps = (int)Core.GetFPS();
+            int fps = (int)Core.GetFPS;
 
             if (fps < 30 && fps >= 15) color = Color.Orange;  // warning FPS
             else if (fps < 15) color = Color.Red;    // bad FPS
@@ -1301,7 +1301,7 @@ namespace NQuad {
         }
         public static void FPS(SpriteFont font, float posX, float posY, float fontSize) {
             Color color = Color.Lime; // good fps
-            int fps = (int)Core.GetFPS();
+            int fps = (int)Core.GetFPS;
 
             if (fps < 30 && fps >= 15) color = Color.Orange;  // warning FPS
             else if (fps < 15) color = Color.Red;    // bad FPS

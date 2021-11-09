@@ -146,13 +146,13 @@ namespace NQuad {
 
         // Back Easing functions
         public static float BackIn(float t, float b, float c, float d) {
-            float s = 1.70158f;
+            const float s = 1.70158f;
             float postFix = t /= d;
             return (c * (postFix) * t * ((s + 1) * t - s) + b);
         }
 
         public static float BackOut(float t, float b, float c, float d) {
-            float s = 1.70158f;
+            const float s = 1.70158f;
             return (c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b);
         }
 

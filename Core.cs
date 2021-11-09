@@ -19,8 +19,8 @@ namespace NQuad {
         public static Game Game { get; private set; }
         public static GraphicsDeviceManager Graphics { get; private set; }
         public static GameTime GameTime { get; private set; }
+        public static WindowConfigFlag ConfigFlag { get; private set; }
 
-        private static WindowConfigFlag windowConfigFlag { get; set; }
         private static Random random { get; set; }
 
         public static void InitCore(Game game, string title, int width, int height, WindowConfigFlag flags, string contentLocationFolder = "Content", int msaaCount = 2) {
@@ -30,6 +30,7 @@ namespace NQuad {
 
             Graphics.DeviceCreated += (e, p) => {
                 Render.InitRender();
+                Input.Init();
 
                 if ((flags & WindowConfigFlag.VSYNC) > 0) Graphics.SynchronizeWithVerticalRetrace = true;
                 else Graphics.SynchronizeWithVerticalRetrace = false;
@@ -52,7 +53,7 @@ namespace NQuad {
                 if ((flags & WindowConfigFlag.ALLOW_ALT_F4) > 0) Game.Window.AllowAltF4 = true;
                 else Game.Window.AllowAltF4 = false;
 
-                windowConfigFlag = flags;
+                ConfigFlag = flags;
 
                 Graphics.PreferredBackBufferWidth = width;
                 Graphics.PreferredBackBufferHeight = height;
@@ -71,150 +72,126 @@ namespace NQuad {
 
         #region Window-related functions
         public static bool IsWindowState(WindowConfigFlag flag) {
-            return (windowConfigFlag & flag) > 0;
+            return (ConfigFlag & flag) > 0;
         }
         public static void SetWindowState(WindowConfigFlag flags) {
-            if (((windowConfigFlag & WindowConfigFlag.VSYNC) != (flags & WindowConfigFlag.VSYNC)) && ((flags & WindowConfigFlag.VSYNC) > 0)) {
+            if (((ConfigFlag & WindowConfigFlag.VSYNC) != (flags & WindowConfigFlag.VSYNC)) && ((flags & WindowConfigFlag.VSYNC) > 0)) {
                 Graphics.SynchronizeWithVerticalRetrace = true;
-                windowConfigFlag |= WindowConfigFlag.VSYNC;
+                ConfigFlag |= WindowConfigFlag.VSYNC;
             }
 
-            if ((windowConfigFlag & WindowConfigFlag.FULLSCREEN_MODE) != (flags & WindowConfigFlag.FULLSCREEN_MODE)) {
+            if ((ConfigFlag & WindowConfigFlag.FULLSCREEN_MODE) != (flags & WindowConfigFlag.FULLSCREEN_MODE)) {
                 Graphics.IsFullScreen = true;
-                windowConfigFlag |= WindowConfigFlag.FULLSCREEN_MODE;
-                if ((windowConfigFlag & WindowConfigFlag.VSYNC) == WindowConfigFlag.VSYNC) {
+                ConfigFlag |= WindowConfigFlag.FULLSCREEN_MODE;
+                if ((ConfigFlag & WindowConfigFlag.VSYNC) == WindowConfigFlag.VSYNC) {
                     Graphics.SynchronizeWithVerticalRetrace = true;
                 }
             }
-            if (((windowConfigFlag & WindowConfigFlag.WINDOW_RESIZABLE) != (flags & WindowConfigFlag.WINDOW_RESIZABLE)) && ((flags & WindowConfigFlag.WINDOW_RESIZABLE) > 0)) {
+            if (((ConfigFlag & WindowConfigFlag.WINDOW_RESIZABLE) != (flags & WindowConfigFlag.WINDOW_RESIZABLE)) && ((flags & WindowConfigFlag.WINDOW_RESIZABLE) > 0)) {
                 Game.Window.AllowUserResizing = true;
-                windowConfigFlag |= WindowConfigFlag.WINDOW_RESIZABLE;
+                ConfigFlag |= WindowConfigFlag.WINDOW_RESIZABLE;
             }
 
-            if (((windowConfigFlag & WindowConfigFlag.WINDOW_UNDECORATED) != (flags & WindowConfigFlag.WINDOW_UNDECORATED)) && ((flags & WindowConfigFlag.WINDOW_UNDECORATED) > 0)) {
+            if (((ConfigFlag & WindowConfigFlag.WINDOW_UNDECORATED) != (flags & WindowConfigFlag.WINDOW_UNDECORATED)) && ((flags & WindowConfigFlag.WINDOW_UNDECORATED) > 0)) {
                 Game.Window.IsBorderless = true;
-                windowConfigFlag |= WindowConfigFlag.WINDOW_UNDECORATED;
+                ConfigFlag |= WindowConfigFlag.WINDOW_UNDECORATED;
             }
 
-            if ((windowConfigFlag & WindowConfigFlag.MSAA) != (flags & WindowConfigFlag.MSAA) && (flags & WindowConfigFlag.MSAA) > 0) {
+            if ((ConfigFlag & WindowConfigFlag.MSAA) != (flags & WindowConfigFlag.MSAA) && (flags & WindowConfigFlag.MSAA) > 0) {
                 Graphics.PreferMultiSampling = true;
-                windowConfigFlag |= WindowConfigFlag.MSAA;
+                ConfigFlag |= WindowConfigFlag.MSAA;
             }
 
-            if ((windowConfigFlag & WindowConfigFlag.FIXED_TIME_STEP) != (flags & WindowConfigFlag.FIXED_TIME_STEP) && (flags & WindowConfigFlag.FIXED_TIME_STEP) > 0) {
+            if ((ConfigFlag & WindowConfigFlag.FIXED_TIME_STEP) != (flags & WindowConfigFlag.FIXED_TIME_STEP) && (flags & WindowConfigFlag.FIXED_TIME_STEP) > 0) {
                 Game.IsFixedTimeStep = true;
-                windowConfigFlag |= WindowConfigFlag.FIXED_TIME_STEP;
+                ConfigFlag |= WindowConfigFlag.FIXED_TIME_STEP;
             }
 
-            if ((windowConfigFlag & WindowConfigFlag.ALLOW_ALT_F4) != (flags & WindowConfigFlag.ALLOW_ALT_F4) && (flags & WindowConfigFlag.ALLOW_ALT_F4) > 0) {
+            if ((ConfigFlag & WindowConfigFlag.ALLOW_ALT_F4) != (flags & WindowConfigFlag.ALLOW_ALT_F4) && (flags & WindowConfigFlag.ALLOW_ALT_F4) > 0) {
                 Game.Window.AllowAltF4 = true;
-                windowConfigFlag |= WindowConfigFlag.ALLOW_ALT_F4;
+                ConfigFlag |= WindowConfigFlag.ALLOW_ALT_F4;
             }
 
             Graphics.ApplyChanges();
 
         }
         public static void ClearWindowState(WindowConfigFlag flags) {
-            if (((windowConfigFlag & WindowConfigFlag.VSYNC) > 0) && ((flags & WindowConfigFlag.VSYNC) > 0)) {
+            if (((ConfigFlag & WindowConfigFlag.VSYNC) > 0) && ((flags & WindowConfigFlag.VSYNC) > 0)) {
                 Graphics.SynchronizeWithVerticalRetrace = false;
-                windowConfigFlag &= ~WindowConfigFlag.VSYNC;
+                ConfigFlag &= ~WindowConfigFlag.VSYNC;
             }
 
-            if (((windowConfigFlag & WindowConfigFlag.FULLSCREEN_MODE) > 0) && ((flags & WindowConfigFlag.FULLSCREEN_MODE) > 0)) {
+            if (((ConfigFlag & WindowConfigFlag.FULLSCREEN_MODE) > 0) && ((flags & WindowConfigFlag.FULLSCREEN_MODE) > 0)) {
                 Graphics.IsFullScreen = false;
-                windowConfigFlag &= ~WindowConfigFlag.FULLSCREEN_MODE;
-                if ((windowConfigFlag & WindowConfigFlag.VSYNC) == WindowConfigFlag.VSYNC) {
+                ConfigFlag &= ~WindowConfigFlag.FULLSCREEN_MODE;
+                if ((ConfigFlag & WindowConfigFlag.VSYNC) == WindowConfigFlag.VSYNC) {
                     Graphics.SynchronizeWithVerticalRetrace = true;
                 }
             }
 
-            if (((windowConfigFlag & WindowConfigFlag.WINDOW_RESIZABLE) > 0) && ((flags & WindowConfigFlag.WINDOW_RESIZABLE) > 0)) {
+            if (((ConfigFlag & WindowConfigFlag.WINDOW_RESIZABLE) > 0) && ((flags & WindowConfigFlag.WINDOW_RESIZABLE) > 0)) {
                 Game.Window.AllowUserResizing = false;
-                windowConfigFlag &= ~WindowConfigFlag.WINDOW_RESIZABLE;
+                ConfigFlag &= ~WindowConfigFlag.WINDOW_RESIZABLE;
             }
 
-            if (((windowConfigFlag & WindowConfigFlag.WINDOW_UNDECORATED) > 0) && ((flags & WindowConfigFlag.WINDOW_UNDECORATED) > 0)) {
+            if (((ConfigFlag & WindowConfigFlag.WINDOW_UNDECORATED) > 0) && ((flags & WindowConfigFlag.WINDOW_UNDECORATED) > 0)) {
                 Game.Window.IsBorderless = false;
-                windowConfigFlag &= ~WindowConfigFlag.WINDOW_UNDECORATED;
+                ConfigFlag &= ~WindowConfigFlag.WINDOW_UNDECORATED;
             }
 
-            if (((windowConfigFlag & WindowConfigFlag.MSAA) > 0) && ((flags & WindowConfigFlag.MSAA) > 0)) {
+            if (((ConfigFlag & WindowConfigFlag.MSAA) > 0) && ((flags & WindowConfigFlag.MSAA) > 0)) {
                 Graphics.PreferMultiSampling = false;
-                windowConfigFlag &= ~WindowConfigFlag.MSAA;
+                ConfigFlag &= ~WindowConfigFlag.MSAA;
             }
 
-            if (((windowConfigFlag & WindowConfigFlag.FIXED_TIME_STEP) > 0) && ((flags & WindowConfigFlag.FIXED_TIME_STEP) > 0)) {
+            if (((ConfigFlag & WindowConfigFlag.FIXED_TIME_STEP) > 0) && ((flags & WindowConfigFlag.FIXED_TIME_STEP) > 0)) {
                 Game.IsFixedTimeStep = false;
-                windowConfigFlag &= ~WindowConfigFlag.FIXED_TIME_STEP;
+                ConfigFlag &= ~WindowConfigFlag.FIXED_TIME_STEP;
             }
 
-            if (((windowConfigFlag & WindowConfigFlag.ALLOW_ALT_F4) > 0) && ((flags & WindowConfigFlag.ALLOW_ALT_F4) > 0)) {
+            if (((ConfigFlag & WindowConfigFlag.ALLOW_ALT_F4) > 0) && ((flags & WindowConfigFlag.ALLOW_ALT_F4) > 0)) {
                 Game.Window.AllowAltF4 = false;
-                windowConfigFlag &= ~WindowConfigFlag.ALLOW_ALT_F4;
+                ConfigFlag &= ~WindowConfigFlag.ALLOW_ALT_F4;
             }
 
             Graphics.ApplyChanges();
         }
-        public static void SetWindowTitle(string title) {
-            Game.Window.Title = title;
+        public static string WindowTitle {
+            get => Game.Window.Title;
+            set => Game.Window.Title = value;
         }
-        public static void SetWindowSize(int width, int height) {
-            Graphics.PreferredBackBufferWidth = width;
-            Graphics.PreferredBackBufferHeight = height;
-            Graphics.ApplyChanges();
+        public static Point WindowSize {
+            get => Game.Window.ClientBounds.Size;
+            set {
+                Graphics.PreferredBackBufferWidth = value.X;
+                Graphics.PreferredBackBufferHeight = value.Y;
+                Graphics.ApplyChanges();
+            }
         }
-        public static DisplayOrientation GetCurrentWindowOrientation() {
-            return Game.Window.CurrentOrientation;
+        public static Point WindowPosition {
+            get => Game.Window.Position;
+            set => Game.Window.Position = value;
         }
-        public static int GetWindowWidth() {
-            return Game.Window.ClientBounds.Width;
-        }
-        public static int GetWindowHeight() {
-            return Game.Window.ClientBounds.Height;
-        }
-        public static void SetWindowPosition(int x, int y) {
-#if DESKTOP && !NETFX_CORE && !WINDOWS_UAP
-            Game.Window.Position = new Point(x, y);
-#else
-            Println("This function is not available on this platform, enter the preprocessor directive DESKTOP if you use Desktop, not UWP.", LOG.WARNING);
-#endif
-        }
-        public static Point GetWindowPosition() {
-            return Game.Window.ClientBounds.Location;
-        }
+        public static DisplayOrientation GetCurrentWindowOrientation => Game.Window.CurrentOrientation;
 
         #endregion Window-related functions
 
         #region Monitor-related functions
 
-        public static int GetMonitorCount() {
-            return GraphicsAdapter.Adapters.Count;
-        }
-        public static GraphicsAdapter GetCurrentMonitor() {
-            return GraphicsAdapter.DefaultAdapter;
-        }
-        public static GraphicsAdapter GetMonitor(int monitor) {
-            return GraphicsAdapter.Adapters[monitor];
-        }
+        public static int MonitorCount => GraphicsAdapter.Adapters.Count;
+        public static GraphicsAdapter CurrentMonitor => GraphicsAdapter.DefaultAdapter;
+        public static GraphicsAdapter GetMonitor(int monitor) => GraphicsAdapter.Adapters[monitor];
 
         #endregion Monitor-related functions
 
         #region Timing-related functions
-        public static TimeSpan GetTargetFPS() {
-            return Game.TargetElapsedTime;
-        }
-        public static void SetTargetFPS(double FPS) {
-            Game.TargetElapsedTime = TimeSpan.FromSeconds(1d / FPS);
-        }
-        public static double GetFPS() {
-            return 1d / GameTime.ElapsedGameTime.TotalSeconds;
-        }
-        public static double GetFrameTime() {
-            return GameTime.ElapsedGameTime.TotalSeconds;
-        }
-        public static TimeSpan GetTimePlaying() {
-            return GameTime.TotalGameTime;
-        }
+
+        public static TimeSpan GetTargetFPS => Game.TargetElapsedTime;
+        public static void SetTargetFPS(double FPS) => Game.TargetElapsedTime = TimeSpan.FromSeconds(1d / FPS);
+        public static double GetFPS => 1d / GameTime.ElapsedGameTime.TotalSeconds;
+        public static double GetFrameTime => GameTime.ElapsedGameTime.TotalSeconds;
+        public static TimeSpan GetTimePlaying => GameTime.TotalGameTime;
+
         #endregion Timing-related functions
 
         #region Misc. functions
@@ -281,12 +258,8 @@ namespace NQuad {
             return (float)(r.NextDouble() * (maximum - minimum) + minimum);
         }
 
-        public static Vector2 MeasureText(string text, int fontSize) {
-            return Render.DefaultFont.MeasureString(text) * fontSize;
-        }
-        public static Vector2 MeasureText(SpriteFont font, string text, float fontSize) {
-            return font.MeasureString(text) * fontSize;
-        }
+        public static Vector2 MeasureText(string text, int fontSize) => Render.DefaultFont.MeasureString(text) * fontSize;
+        public static Vector2 MeasureText(SpriteFont font, string text, float fontSize) => font.MeasureString(text) * fontSize;
 
         public static void OpenURL(string url) {
             var psi = new System.Diagnostics.ProcessStartInfo();
@@ -300,8 +273,8 @@ namespace NQuad {
         #region  Files management functions
 
         public static void TakeScreenShot(string filename, string extension) {
-            using(Texture2D texture = new Texture2D(Graphics.GraphicsDevice, GetWindowWidth(), GetWindowHeight())) {
-                Color[] data = new Color[GetWindowWidth() * GetWindowHeight()];
+            using(Texture2D texture = new Texture2D(Graphics.GraphicsDevice, WindowSize.X, WindowSize.Y)) {
+                Color[] data = new Color[WindowSize.X * WindowSize.Y];
                 Graphics.GraphicsDevice.GetBackBufferData(data);
                 texture.SetData(data);
                 using (Stream stream = new FileStream($"{filename}.{extension}", FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite)) {

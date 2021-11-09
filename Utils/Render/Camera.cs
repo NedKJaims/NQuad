@@ -15,11 +15,11 @@ namespace NQuad.Utils.Render {
             set { zoom = MathHelper.Clamp(value, -10f, 10f); }
         }
 
-        public Camera(Vector2 off, Vector2 targ, float rot = 0f, float _zoom = 1f) {
-            Offset = off;
-            Target = targ;
-            Rotation = rot;
-            zoom = MathHelper.Clamp(_zoom, -10f, 10f);
+        public Camera(Vector2 offset, Vector2 target, float rotation = 0f, float zoom = 1f) {
+            Offset = offset;
+            Target = target;
+            Rotation = rotation;
+            this.zoom = MathHelper.Clamp(zoom, -10f, 10f);
         }
 
     }
